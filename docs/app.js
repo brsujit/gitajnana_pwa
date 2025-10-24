@@ -1,44 +1,43 @@
-const SHEET_URL = "PASTE_YOUR_WEBAPP_URL_HERE"; // ← replace this!
+document.getElementById("pdfBtn").addEventListener("click", async () => {
+  const district = prompt("Enter District name for report:");
+  if (!district) return;
 
-async function loadData() {
-  const res = await fetch(SHEET_URL);
-  const data = await res.json();
-  displayData(data);
-}
-
-function displayData(rows) {
-  const table = document.getElementById("dataTable");
-  table.innerHTML = "";
-  if (!rows.length) return;
-  const headers = Object.keys(rows[0]);
-  let html = "<tr>" + headers.map(h => `<th>${h}</th>`).join("") + "</tr>";
-  rows.forEach(r => {
-    html += "<tr>" + headers.map(h => `<td>${r[h] ?? ""}</td>`).join("") + "</tr>";
-  });
-  table.innerHTML = html;
-}
-
-document.getElementById("dataForm").addEventListener("submit", async e => {
-  e.preventDefault();
-  const form = e.target;
-  const record = Object.fromEntries(new FormData(form).entries());
-  await fetch(SHEET_URL, {
-    method: "POST",
-    body: JSON.stringify(record),
-    headers: { "Content-Type": "application/json" },
-  });
-  alert("Record added!");
-  form.reset();
-  loadData();
-});
-
-document.getElementById("searchDistrict").addEventListener("input", async e => {
   const res = await fetch(SHEET_URL);
   const data = await res.json();
   const filtered = data.filter(r =>
-    (r.DISTRICT || "").toLowerCase().includes(e.target.value.toLowerCase())
+    (r.DISTRICT || "").toLowerCase() === district.toLowerCase()
   );
-  displayData(filtered);
-});
 
-window.addEventListener("load", loadData);
+  if (!filtered.length) {
+    alert("No records found for this district!");
+    return;
+  }
+
+  // Calculate total participants
+  let total = filtered.reduce(
+    (sum, r) => sum + Number(r["TOTAL NO OF PARTICIPANTS"] || 0),
+    0
+  );
+
+  // Generate PDF
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: "landscape" });
+
+  doc.setFontSize(16);
+  doc.text(`Gitajnana Examination Report - ${district}`, 14, 15);
+  doc.setFontSize(12);
+  doc.text(`Total Participants: ${total}`, 14, 25);
+
+  // Prepare table data
+  const headers = Object.keys(filtered[0]);
+  const body = filtered.map(r => headers.map(h => r[h]));
+
+  doc.autoTable({
+    startY: 35,
+    head: [headers],
+    body: body,
+    styles: { fontSize: 8 },
+  });
+
+  doc.save(`Gitajnana_Report_${district}.pdf`);
+});
