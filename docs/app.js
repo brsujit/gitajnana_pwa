@@ -7,7 +7,7 @@ async function loadData() {
   tableBody.innerHTML = "<tr><td colspan='17'>Loading...</td></tr>";
 
   try {
-    const response = await fetch(SHEET_URL);
+    const response = await fetch(https://script.google.com/macros/s/AKfycbxkQ-vrh9OwG3Q825tev19dWr0wBklm31unoWZ6npxxzOu0R1JIITsra68o7VO8pIK0/exec);
     const data = await response.json();
 
     tableBody.innerHTML = "";
