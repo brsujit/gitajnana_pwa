@@ -1,0 +1,6 @@
+body { font-family: sans-serif; padding: 1rem; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: .5rem; }
+input, button { padding: .5rem; }
+table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
+th, td { border: 1px solid #ccc; padding: .4rem; text-align: left; }
+th { background: #eee; }
