@@ -6,6 +6,9 @@
   <title>Gitajnana Examination Data Handler</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="stylesheet" href="style.css">
+  <!-- Add jsPDF libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body>
   <h1>Gitajnana Examination Data Handler</h1>
@@ -29,11 +32,17 @@
       <input name="BLOCK COORDINATOR WITH CONTACT NO.1" placeholder="Block Coord 1">
       <input name="BLOCK COORDINATOR WITH CONTACT NO.2" placeholder="Block Coord 2">
     </div>
-    <button type="submit">Add Record</button>
+    <button type="submit">Save Record</button>
   </form>
 
-  <hr>
-  <input id="searchDistrict" placeholder="Filter by District">
+  <div class="toolbar">
+    <input id="searchDistrict" placeholder="Filter by District">
+    <button id="exportBtn">Export CSV</button>
+    <input type="file" id="importFile" accept=".csv" hidden>
+    <button id="importBtn">Import CSV</button>
+    <button id="pdfBtn">Download PDF Report</button>
+  </div>
+
   <table id="dataTable"></table>
 
   <script src="app.js"></script>
