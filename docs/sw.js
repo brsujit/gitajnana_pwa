@@ -1,12 +1,9 @@
-const CACHE_NAME = 'gitajnana-cache-v1';
-const urlsToCache = ['/', '/index.html', '/app.js', '/manifest.webmanifest'];
-
-self.addEventListener('install', event => {
-  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache)));
+self.addEventListener("install", e => {
+  e.waitUntil(caches.open("gitajnana-cache").then(c => c.addAll(["./", "./index.html", "./app.js"])));
 });
 
-self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request).then(response => response || fetch(event.request))
+self.addEventListener("fetch", e => {
+  e.respondWith(
+    caches.match(e.request).then(r => r || fetch(e.request))
   );
 });
