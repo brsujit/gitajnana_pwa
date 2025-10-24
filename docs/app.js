@@ -2,7 +2,7 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
   const district = prompt("Enter District name for report:");
   if (!district) return;
 
-  const res = await fetch(SHEET_URL);
+  const res = await fetch(https://script.google.com/macros/s/AKfycbxkQ-vrh9OwG3Q825tev19dWr0wBklm31unoWZ6npxxzOu0R1JIITsra68o7VO8pIK0/exec);
   const data = await res.json();
   const filtered = data.filter(r =>
     (r.DISTRICT || "").toLowerCase() === district.toLowerCase()
