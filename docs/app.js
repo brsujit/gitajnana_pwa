@@ -1,14 +1,6 @@
 // ========= CONFIG ===========
 const SHEET_URL = "https://script.google.com/macros/s/AKfycbxHbrU0nPhyEcOBqQNXLCHs15m3TZrYWE9eCei0GTgUDLVzu2iD1U0MVfQvpS2L5yAF5w/exec"; 
 
-window.addEventListener("DOMContentLoaded", () => {
-  // All your button event listeners go here
-  document.getElementById("importBtn").addEventListener("click", importCSV);
-  document.getElementById("exportBtn").addEventListener("click", exportCSV);
-  document.getElementById("pdfBtn").addEventListener("click", generatePDF);
-  document.getElementById("dataForm").addEventListener("submit", addRecord);
-});
-
 // ========= GLOBAL ===========
 let allData = [];
 
@@ -19,6 +11,7 @@ async function loadData() {
 
   try {
     const res = await fetch(SHEET_URL);
+    if (!res.ok) throw new Error("Failed to fetch data");
     allData = await res.json();
 
     if (!allData.length) {
@@ -39,7 +32,7 @@ async function loadData() {
 }
 
 // ========= ADD RECORD ===========
-document.getElementById("dataForm").addEventListener("submit", async e => {
+async function addRecord(e) {
   e.preventDefault();
   const record = Object.fromEntries(new FormData(e.target).entries());
   try {
@@ -52,12 +45,13 @@ document.getElementById("dataForm").addEventListener("submit", async e => {
     e.target.reset();
     loadData();
   } catch (err) {
+    console.error(err);
     alert("Error adding record");
   }
-});
+}
 
 // ========= EXPORT CSV ===========
-document.getElementById("exportBtn").addEventListener("click", async () => {
+async function exportCSV() {
   try {
     const res = await fetch(SHEET_URL);
     const data = await res.json();
@@ -75,22 +69,25 @@ document.getElementById("exportBtn").addEventListener("click", async () => {
     a.href = url;
     a.download = "Gitajnana_Data.csv";
     a.click();
-  } catch {
+  } catch (err) {
+    console.error(err);
     alert("Export failed!");
   }
-});
+}
 
 // ========= IMPORT CSV ===========
-document.getElementById("importBtn").addEventListener("click", () => {
+async function importCSV() {
   const input = document.createElement("input");
   input.type = "file";
   input.accept = ".csv";
+
   input.onchange = async e => {
     const file = e.target.files[0];
     if (!file) return;
     const text = await file.text();
     const [headerLine, ...lines] = text.split("\n").filter(l => l.trim());
     const headers = headerLine.split(",").map(h => h.trim());
+
     for (const line of lines) {
       const vals = line.split(",");
       if (!vals.length) continue;
@@ -102,14 +99,16 @@ document.getElementById("importBtn").addEventListener("click", () => {
         headers: { "Content-Type": "application/json" }
       });
     }
+
     alert("CSV imported successfully!");
     loadData();
   };
+
   input.click();
-});
+}
 
 // ========= PDF REPORT ===========
-document.getElementById("pdfBtn").addEventListener("click", async () => {
+async function generatePDF() {
   try {
     const res = await fetch(SHEET_URL);
     const data = await res.json();
@@ -150,22 +149,20 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
         "District Total"
       ];
 
-      // Prepare rows with District Total blank first
-      const tableBody = rows.map(r => {
-        return [
-          r["District"] || "",
-          r["Place"] || "",
-          r["Date of Competition"] || "",
-          r["GROUP A"] || "",
-          r["GROUP B"] || "",
-          r["GROUP C"] || "",
-          r["GROUP D"] || "",
-          r["TOTAL NO OF PARTICIPANTS"] || "",
-          ""
-        ];
-      });
+      // Prepare rows
+      const tableBody = rows.map(r => [
+        r["District"] || "",
+        r["Place"] || "",
+        r["Date of Competition"] || "",
+        r["GROUP A"] || "",
+        r["GROUP B"] || "",
+        r["GROUP C"] || "",
+        r["GROUP D"] || "",
+        r["TOTAL NO OF PARTICIPANTS"] || "",
+        ""
+      ]);
 
-      // Compute total participants per district
+      // Compute total per district
       const total = rows.reduce(
         (sum, r) => sum + Number(r["TOTAL NO OF PARTICIPANTS"] || 0),
         0
@@ -173,15 +170,7 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
 
       // Add total row
       tableBody.push([
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "District Total",
-        total.toString()
+        "", "", "", "", "", "", "", "District Total", total.toString()
       ]);
 
       doc.autoTable({
@@ -209,7 +198,14 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
     console.error(err);
     alert("Failed to generate PDF!");
   }
-});
+}
 
 // ========= INIT ===========
+window.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("importBtn").addEventListener("click", importCSV);
+  document.getElementById("exportBtn").addEventListener("click", exportCSV);
+  document.getElementById("pdfBtn").addEventListener("click", generatePDF);
+  document.getElementById("dataForm").addEventListener("submit", addRecord);
+});
+
 window.addEventListener("load", loadData);
