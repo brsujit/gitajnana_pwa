@@ -9,11 +9,6 @@ window.addEventListener("DOMContentLoaded", () => {
   document.getElementById("dataForm").addEventListener("submit", addRecord);
 });
 
-function importCSV() { ... }
-function exportCSV() { ... }
-function generatePDF() { ... }
-function addRecord(e) { ... }
-
 // ========= GLOBAL ===========
 let allData = [];
 
