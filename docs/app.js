@@ -1,3 +1,13 @@
+window.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("dataForm").addEventListener("submit", async e => {
+    // your code here...
+  });
+
+  document.getElementById("importBtn").addEventListener("click", importCSV);
+  document.getElementById("exportBtn").addEventListener("click", exportCSV);
+  document.getElementById("pdfBtn").addEventListener("click", generatePDF);
+});
+
 // ========= CONFIG ===========
 const SHEET_URL = "https://script.google.com/macros/s/AKfycbxHbrU0nPhyEcOBqQNXLCHs15m3TZrYWE9eCei0GTgUDLVzu2iD1U0MVfQvpS2L5yAF5w/exec"; 
 
