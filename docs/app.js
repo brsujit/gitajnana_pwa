@@ -1,3 +1,6 @@
+// ========= CONFIG ===========
+const SHEET_URL = "https://script.google.com/macros/s/AKfycbxHbrU0nPhyEcOBqQNXLCHs15m3TZrYWE9eCei0GTgUDLVzu2iD1U0MVfQvpS2L5yAF5w/exec"; 
+
 window.addEventListener("DOMContentLoaded", () => {
   // All your button event listeners go here
   document.getElementById("importBtn").addEventListener("click", importCSV);
@@ -10,9 +13,6 @@ function importCSV() { ... }
 function exportCSV() { ... }
 function generatePDF() { ... }
 function addRecord(e) { ... }
-
-// ========= CONFIG ===========
-const SHEET_URL = "https://script.google.com/macros/s/AKfycbxHbrU0nPhyEcOBqQNXLCHs15m3TZrYWE9eCei0GTgUDLVzu2iD1U0MVfQvpS2L5yAF5w/exec"; 
 
 // ========= GLOBAL ===========
 let allData = [];
