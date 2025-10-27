@@ -109,7 +109,6 @@ async function importCSV() {
 }
 
 // ========= PDF REPORT ===========
-// ========= PDF REPORT ===========
 document.getElementById("pdfBtn").addEventListener("click", async () => {
   try {
     const res = await fetch(SHEET_URL);
@@ -156,7 +155,9 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
 
     let y = 25;
     for (const [district, rows] of Object.entries(districts)) {
+      // 🟦 District heading - bold and black
       doc.setFont(undefined, "bold");
+      doc.setTextColor(0, 0, 0);
       doc.text(`District: ${district}`, 14, y);
       doc.setFont(undefined, "normal");
       y += 5;
@@ -174,9 +175,9 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
         "District Total"
       ];
 
-      // Build table rows
-      const tableBody = rows.map(r => [
-        r["DISTRICT"] || "",
+      // Build table rows, blanking district name after first row
+      const tableBody = rows.map((r, i) => [
+        i === 0 ? (r["DISTRICT"] || "") : "", // show district name only once
         r["PLACE"] || "",
         r["DATE OF COMPETITION"] ? new Date(r["DATE OF COMPETITION"]).toLocaleDateString() : "",
         r["GROUP A"] || "",
@@ -193,6 +194,7 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
         0
       );
 
+      // Add total row
       tableBody.push(["", "", "", "", "", "", "", "District Total", total.toString()]);
 
       doc.autoTable({
@@ -200,8 +202,8 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
         head: [headers],
         body: tableBody,
         theme: "grid",
-        styles: { fontSize: 8, halign: "center" },
-        headStyles: { fillColor: [240, 240, 240] },
+        styles: { fontSize: 8, halign: "center", valign: "middle" },
+        headStyles: { fillColor: [240, 240, 240], textColor: 0, fontStyle: "bold" },
       });
 
       y = doc.lastAutoTable.finalY + 10;
