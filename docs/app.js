@@ -128,6 +128,16 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
       return;
     }
 
+    // 🧹 Normalize keys (remove newlines, trim spaces)
+    data = data.map(row => {
+      const cleaned = {};
+      for (const key in row) {
+        const cleanKey = key.replace(/\n/g, " ").replace(/\s+/g, " ").trim();
+        cleaned[cleanKey] = row[key];
+      }
+      return cleaned;
+    });
+
     // Group by District
     const districts = {};
     data.forEach(row => {
@@ -166,9 +176,9 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
 
       // Build table rows
       const tableBody = rows.map(r => [
-        r["DISTRICT"] || r["District"] || "",
-        r["PLACE"] || r["Place"] || "",
-        r["DATE OF COMPETITION"] || r["Date of Competition"] || "",
+        r["DISTRICT"] || "",
+        r["PLACE"] || "",
+        r["DATE OF COMPETITION"] ? new Date(r["DATE OF COMPETITION"]).toLocaleDateString() : "",
         r["GROUP A"] || "",
         r["GROUP B"] || "",
         r["GROUP C"] || "",
