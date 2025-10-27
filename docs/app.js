@@ -157,14 +157,7 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
     let y = 25;
 
     for (const [district, rows] of Object.entries(districts)) {
-      // 🟦 District heading
-      doc.setFont(undefined, "bold");
-      doc.setTextColor(0, 0, 0);
-      doc.text(`District: ${district}`, 14, y);
-      doc.setFont(undefined, "normal");
-      y += 5;
-
-      // Column order for PDF
+      // Prepare data for measurement
       const headers = [
         "District",
         "Place",
@@ -177,7 +170,6 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
         "District Total"
       ];
 
-      // Build table rows (show district name in every row again)
       const tableBody = rows.map(r => [
         r["DISTRICT"] || "",
         r["PLACE"] || "",
@@ -192,15 +184,36 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
         ""
       ]);
 
-      // Compute total for district
       const total = rows.reduce(
         (sum, r) => sum + Number(r["TOTAL NO OF PARTICIPANTS"] || 0),
         0
       );
-
-      // Add total row
       tableBody.push(["", "", "", "", "", "", "", "District Total", total.toString()]);
 
+      // ✳️ Estimate table height before drawing
+      const tempDoc = new jsPDF({ orientation: "landscape" });
+      tempDoc.autoTable({
+        head: [headers],
+        body: tableBody,
+        theme: "grid",
+        styles: { fontSize: 8 },
+      });
+      const estimatedHeight = tempDoc.lastAutoTable.finalY - 10; // rough estimate
+
+      // If not enough space, add new page before drawing this district
+      if (y + estimatedHeight > 185) {
+        doc.addPage();
+        y = 25;
+      }
+
+      // 🟦 District heading
+      doc.setFont(undefined, "bold");
+      doc.setTextColor(0, 0, 0);
+      doc.text(`District: ${district}`, 14, y);
+      doc.setFont(undefined, "normal");
+      y += 5;
+
+      // Draw actual table
       doc.autoTable({
         startY: y,
         head: [headers],
@@ -208,18 +221,18 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
         theme: "grid",
         styles: { fontSize: 8, halign: "center", valign: "middle" },
         headStyles: {
-          fillColor: [240, 240, 240], // light gray background
-          textColor: [0, 0, 0], // black text
+          fillColor: [240, 240, 240],
+          textColor: [0, 0, 0],
           fontStyle: "bold"
         },
         bodyStyles: {
           lineColor: [200, 200, 200],
           lineWidth: 0.1
-        }
+        },
       });
 
       y = doc.lastAutoTable.finalY + 10;
-      if (y > 180) {
+      if (y > 185) {
         doc.addPage();
         y = 25;
       }
