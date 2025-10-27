@@ -1,5 +1,5 @@
 // ========= CONFIG ===========
-const SHEET_URL = "https://script.google.com/macros/s/AKfycbxHbrU0nPhyEcOBqQNXLCHs15m3TZrYWE9eCei0GTgUDLVzu2iD1U0MVfQvpS2L5yAF5w/exec"; 
+const SHEET_URL = "https://script.google.com/macros/s/AKfycbwU9yB0zmFSBHVbDurEGJNCncpdfjurZ6jT55zzR21CIh9EupmXMCUrEN8GuvHgBEEN/exec"; 
 
 // ========= GLOBAL ===========
 let allData = [];
