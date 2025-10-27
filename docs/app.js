@@ -150,12 +150,14 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
     const doc = new jsPDF({ orientation: "landscape" });
 
     doc.setFontSize(16);
+    doc.setTextColor(0, 0, 0);
     doc.text("Gitajnana Examination – District-wise Participants Report", 14, 15);
     doc.setFontSize(10);
 
     let y = 25;
+
     for (const [district, rows] of Object.entries(districts)) {
-      // 🟦 District heading - bold and black
+      // 🟦 District Heading
       doc.setFont(undefined, "bold");
       doc.setTextColor(0, 0, 0);
       doc.text(`District: ${district}`, 14, y);
@@ -175,11 +177,13 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
         "District Total"
       ];
 
-      // Build table rows, blanking district name after first row
+      // Build table rows
       const tableBody = rows.map((r, i) => [
         i === 0 ? (r["DISTRICT"] || "") : "", // show district name only once
         r["PLACE"] || "",
-        r["DATE OF COMPETITION"] ? new Date(r["DATE OF COMPETITION"]).toLocaleDateString() : "",
+        r["DATE OF COMPETITION"]
+          ? new Date(r["DATE OF COMPETITION"]).toLocaleDateString()
+          : "",
         r["GROUP A"] || "",
         r["GROUP B"] || "",
         r["GROUP C"] || "",
@@ -188,7 +192,7 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
         ""
       ]);
 
-      // Compute total for district
+      // Compute district total
       const total = rows.reduce(
         (sum, r) => sum + Number(r["TOTAL NO OF PARTICIPANTS"] || 0),
         0
@@ -197,13 +201,30 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
       // Add total row
       tableBody.push(["", "", "", "", "", "", "", "District Total", total.toString()]);
 
+      // 🖨️ Draw table
       doc.autoTable({
         startY: y,
         head: [headers],
         body: tableBody,
         theme: "grid",
         styles: { fontSize: 8, halign: "center", valign: "middle" },
-        headStyles: { fillColor: [240, 240, 240], textColor: 0, fontStyle: "bold" },
+        headStyles: {
+          fillColor: [240, 240, 240],
+          textColor: [0, 0, 0], // black text
+          fontStyle: "bold",
+        },
+        bodyStyles: {
+          cellPadding: 2,
+          lineColor: [180, 180, 180],
+          lineWidth: 0.1,
+        },
+        didParseCell: data => {
+          // 🟩 Simulate merged district column
+          if (data.section === "body" && data.column.index === 0 && data.cell.raw === "") {
+            data.cell.styles.lineWidth = { top: 0.1, right: 0.1, bottom: 0.1, left: 0 };
+            data.cell.styles.textColor = [255, 255, 255]; // hide empty text
+          }
+        },
       });
 
       y = doc.lastAutoTable.finalY + 10;
