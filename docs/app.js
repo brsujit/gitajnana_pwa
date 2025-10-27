@@ -10,13 +10,15 @@ async function loadData() {
 
   try {
     const res = await fetch(SHEET_URL);
-    if (!res.ok) throw new Error("Failed to fetch data");
-    allData = await res.json();
+const text = await res.text();
+try {
+  allData = JSON.parse(text);
+} catch {
+  console.error("Invalid JSON from server:", text);
+  document.getElementById("dataTable").innerHTML = "<tr><td>Error loading data</td></tr>";
+  return;
+}
 
-    if (!allData.length) {
-      table.innerHTML = "<tr><td>No data found</td></tr>";
-      return;
-    }
 
     const headers = Object.keys(allData[0]);
     let html = "<tr>" + headers.map(h => `<th>${h}</th>`).join("") + "</tr>";
