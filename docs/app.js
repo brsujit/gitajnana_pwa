@@ -157,7 +157,7 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
     let y = 25;
 
     for (const [district, rows] of Object.entries(districts)) {
-      // 🟦 District Heading
+      // 🟦 District heading
       doc.setFont(undefined, "bold");
       doc.setTextColor(0, 0, 0);
       doc.text(`District: ${district}`, 14, y);
@@ -177,9 +177,9 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
         "District Total"
       ];
 
-      // Build table rows
-      const tableBody = rows.map((r, i) => [
-        i === 0 ? (r["DISTRICT"] || "") : "", // show district name only once
+      // Build table rows (show district name in every row again)
+      const tableBody = rows.map(r => [
+        r["DISTRICT"] || "",
         r["PLACE"] || "",
         r["DATE OF COMPETITION"]
           ? new Date(r["DATE OF COMPETITION"]).toLocaleDateString()
@@ -192,7 +192,7 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
         ""
       ]);
 
-      // Compute district total
+      // Compute total for district
       const total = rows.reduce(
         (sum, r) => sum + Number(r["TOTAL NO OF PARTICIPANTS"] || 0),
         0
@@ -201,7 +201,6 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
       // Add total row
       tableBody.push(["", "", "", "", "", "", "", "District Total", total.toString()]);
 
-      // 🖨️ Draw table
       doc.autoTable({
         startY: y,
         head: [headers],
@@ -209,22 +208,14 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
         theme: "grid",
         styles: { fontSize: 8, halign: "center", valign: "middle" },
         headStyles: {
-          fillColor: [240, 240, 240],
+          fillColor: [240, 240, 240], // light gray background
           textColor: [0, 0, 0], // black text
-          fontStyle: "bold",
+          fontStyle: "bold"
         },
         bodyStyles: {
-          cellPadding: 2,
-          lineColor: [180, 180, 180],
-          lineWidth: 0.1,
-        },
-        didParseCell: data => {
-          // 🟩 Simulate merged district column
-          if (data.section === "body" && data.column.index === 0 && data.cell.raw === "") {
-            data.cell.styles.lineWidth = { top: 0.1, right: 0.1, bottom: 0.1, left: 0 };
-            data.cell.styles.textColor = [255, 255, 255]; // hide empty text
-          }
-        },
+          lineColor: [200, 200, 200],
+          lineWidth: 0.1
+        }
       });
 
       y = doc.lastAutoTable.finalY + 10;
