@@ -1,5 +1,5 @@
 // ========= CONFIG ===========
-const SHEET_URL = "const SHEET_URL = "https://script.google.com/macros/s/YOUR_NEW_ID/exec";
+const SHEET_URL = "const SHEET_URL = "https://script.google.com/macros/s/AKfycbybyg1IjkS-bA-uQPQB11C3ZuvxzZLhfBWwiCso4398jSJEFExMmatA6deH8zlEO42xeg/exec";
 "; 
 
 // ========= GLOBAL ===========
