@@ -109,26 +109,40 @@ async function importCSV() {
 }
 
 // ========= PDF REPORT ===========
-async function generatePDF() {
+// ========= PDF REPORT ===========
+document.getElementById("pdfBtn").addEventListener("click", async () => {
   try {
     const res = await fetch(SHEET_URL);
-    const data = await res.json();
-    if (!data.length) return alert("No data available!");
+    const text = await res.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      console.error("Invalid JSON:", text);
+      alert("Could not load data for PDF!");
+      return;
+    }
+
+    if (!data.length) {
+      alert("No data available!");
+      return;
+    }
 
     // Group by District
     const districts = {};
-    data.forEach(r => {
-      const d = r["District"] || "Unknown";
-      if (!districts[d]) districts[d] = [];
-      districts[d].push(r);
+    data.forEach(row => {
+      const district = row["DISTRICT"] || row["District"] || "Unknown";
+      if (!districts[district]) districts[district] = [];
+      districts[district].push(row);
     });
 
     // Create PDF
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: "landscape" });
+
     doc.setFontSize(16);
     doc.text("Gitajnana Examination – District-wise Participants Report", 14, 15);
-    doc.setFontSize(11);
+    doc.setFontSize(10);
 
     let y = 25;
     for (const [district, rows] of Object.entries(districts)) {
@@ -150,11 +164,11 @@ async function generatePDF() {
         "District Total"
       ];
 
-      // Prepare rows
+      // Build table rows
       const tableBody = rows.map(r => [
-        r["District"] || "",
-        r["Place"] || "",
-        r["Date of Competition"] || "",
+        r["DISTRICT"] || r["District"] || "",
+        r["PLACE"] || r["Place"] || "",
+        r["DATE OF COMPETITION"] || r["Date of Competition"] || "",
         r["GROUP A"] || "",
         r["GROUP B"] || "",
         r["GROUP C"] || "",
@@ -163,16 +177,13 @@ async function generatePDF() {
         ""
       ]);
 
-      // Compute total per district
+      // Compute total for district
       const total = rows.reduce(
         (sum, r) => sum + Number(r["TOTAL NO OF PARTICIPANTS"] || 0),
         0
       );
 
-      // Add total row
-      tableBody.push([
-        "", "", "", "", "", "", "", "District Total", total.toString()
-      ]);
+      tableBody.push(["", "", "", "", "", "", "", "District Total", total.toString()]);
 
       doc.autoTable({
         startY: y,
@@ -180,17 +191,13 @@ async function generatePDF() {
         body: tableBody,
         theme: "grid",
         styles: { fontSize: 8, halign: "center" },
-        headStyles: { fillColor: [220, 220, 220] },
-        didDrawPage: data => {
-          y = data.cursor.y + 15;
-        }
+        headStyles: { fillColor: [240, 240, 240] },
       });
 
+      y = doc.lastAutoTable.finalY + 10;
       if (y > 180) {
         doc.addPage();
         y = 25;
-      } else {
-        y += 10;
       }
     }
 
@@ -199,7 +206,7 @@ async function generatePDF() {
     console.error(err);
     alert("Failed to generate PDF!");
   }
-}
+});
 
 // ========= INIT ===========
 window.addEventListener("DOMContentLoaded", () => {
