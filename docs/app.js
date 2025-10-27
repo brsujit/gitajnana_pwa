@@ -108,22 +108,128 @@ async function importCSV() {
   input.click();
 }
 
-doc.autoTable({
-  startY: y,
-  head: [headers],
-  body: tableBody,
-  theme: "grid",
-  styles: { fontSize: 8, halign: "center", valign: "middle" },
-  headStyles: {
-    fillColor: [240, 240, 240],
-    textColor: [0, 0, 0],
-    fontStyle: "bold"
-  },
-  bodyStyles: {
-    lineColor: [200, 200, 200],
-    lineWidth: 0.1
-  },
-  pageBreak: "avoid"   // 🟩 prevents table splitting across pages
+// ========= PDF REPORT ===========
+document.getElementById("pdfBtn").addEventListener("click", async () => {
+  try {
+    const res = await fetch(SHEET_URL);
+    const text = await res.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      console.error("Invalid JSON:", text);
+      alert("Could not load data for PDF!");
+      return;
+    }
+
+    if (!data.length) {
+      alert("No data available!");
+      return;
+    }
+
+    // 🧹 Normalize keys (remove newlines, trim spaces)
+    data = data.map(row => {
+      const cleaned = {};
+      for (const key in row) {
+        const cleanKey = key.replace(/\n/g, " ").replace(/\s+/g, " ").trim();
+        cleaned[cleanKey] = row[key];
+      }
+      return cleaned;
+    });
+
+    // Group by District
+    const districts = {};
+    data.forEach(row => {
+      const district = row["DISTRICT"] || row["District"] || "Unknown";
+      if (!districts[district]) districts[district] = [];
+      districts[district].push(row);
+    });
+
+    // Create PDF
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: "landscape" });
+
+    doc.setFontSize(16);
+    doc.setTextColor(0, 0, 0);
+    doc.text("Gitajnana Examination – District-wise Participants Report", 14, 15);
+    doc.setFontSize(10);
+
+    let y = 25;
+
+    for (const [district, rows] of Object.entries(districts)) {
+      // 🟦 District heading
+      doc.setFont(undefined, "bold");
+      doc.setTextColor(0, 0, 0);
+      doc.text(`District: ${district}`, 14, y);
+      doc.setFont(undefined, "normal");
+      y += 5;
+
+      // Column order for PDF
+      const headers = [
+        "District",
+        "Place",
+        "Date of Competition",
+        "GROUP A",
+        "GROUP B",
+        "GROUP C",
+        "GROUP D",
+        "TOTAL NO OF PARTICIPANTS",
+        "District Total"
+      ];
+
+      // Build table rows (show district name in every row again)
+      const tableBody = rows.map(r => [
+        r["DISTRICT"] || "",
+        r["PLACE"] || "",
+        r["DATE OF COMPETITION"]
+          ? new Date(r["DATE OF COMPETITION"]).toLocaleDateString()
+          : "",
+        r["GROUP A"] || "",
+        r["GROUP B"] || "",
+        r["GROUP C"] || "",
+        r["GROUP D"] || "",
+        r["TOTAL NO OF PARTICIPANTS"] || "",
+        ""
+      ]);
+
+      // Compute total for district
+      const total = rows.reduce(
+        (sum, r) => sum + Number(r["TOTAL NO OF PARTICIPANTS"] || 0),
+        0
+      );
+
+      // Add total row
+      tableBody.push(["", "", "", "", "", "", "", "District Total", total.toString()]);
+
+      doc.autoTable({
+        startY: y,
+        head: [headers],
+        body: tableBody,
+        theme: "grid",
+        styles: { fontSize: 8, halign: "center", valign: "middle" },
+        headStyles: {
+          fillColor: [240, 240, 240], // light gray background
+          textColor: [0, 0, 0], // black text
+          fontStyle: "bold"
+        },
+        bodyStyles: {
+          lineColor: [200, 200, 200],
+          lineWidth: 0.1
+        }
+      });
+
+      y = doc.lastAutoTable.finalY + 10;
+      if (y > 180) {
+        doc.addPage();
+        y = 25;
+      }
+    }
+
+    doc.save("Gitajnana_District_Report.pdf");
+  } catch (err) {
+    console.error(err);
+    alert("Failed to generate PDF!");
+  }
 });
 
 // ========= INIT ===========
