@@ -1,5 +1,6 @@
 // ========= CONFIG ===========
-const SHEET_URL = "https://script.google.com/macros/s/AKfycbwU9yB0zmFSBHVbDurEGJNCncpdfjurZ6jT55zzR21CIh9EupmXMCUrEN8GuvHgBEEN/exec"; 
+const SHEET_URL = "const SHEET_URL = "https://script.google.com/macros/s/YOUR_NEW_ID/exec";
+"; 
 
 // ========= GLOBAL ===========
 let allData = [];
