@@ -137,13 +137,18 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
       return cleaned;
     });
 
-    // Group by District
+    // 🧩 Group by District
     const districts = {};
     data.forEach(row => {
       const district = row["DISTRICT"]?.trim() || "Unknown";
       if (!districts[district]) districts[district] = [];
       districts[district].push(row);
     });
+
+    // 🧮 Sort districts alphabetically
+    const sortedDistricts = Object.keys(districts).sort((a, b) =>
+      a.localeCompare(b)
+    );
 
     // Create PDF
     const { jsPDF } = window.jspdf;
@@ -163,8 +168,12 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
       totalD = 0,
       totalParticipants = 0;
 
-    for (const [district, rows] of Object.entries(districts)) {
-      if (district === "Unknown") continue; // skip unknowns (for now)
+    for (const district of sortedDistricts) {
+      const rows = districts[district];
+      if (district === "Unknown") continue;
+
+      // 🟦 Sort blocks alphabetically within district
+      rows.sort((a, b) => (a["BLOCK"] || "").localeCompare(b["BLOCK"] || ""));
 
       // 🟦 District Heading
       doc.setFont(undefined, "bold");
@@ -220,6 +229,7 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
       // Add total row
       tableBody.push(["", "", "", "", "", "", "", "", "District Total", total.toString()]);
 
+      // Draw table
       doc.autoTable({
         startY: y,
         head: [headers],
@@ -235,7 +245,7 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
           lineColor: [200, 200, 200],
           lineWidth: 0.1
         },
-        pageBreak: "avoid"
+        pageBreak: "avoid" // ✅ keeps table together
       });
 
       y = doc.lastAutoTable.finalY + 10;
@@ -245,7 +255,7 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
       }
     }
 
-    // 🟩 Add STATE SUMMARY
+    // 🟩 STATE SUMMARY PAGE
     doc.addPage();
     doc.setFontSize(14);
     doc.setFont(undefined, "bold");
@@ -254,7 +264,7 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
     doc.setFont(undefined, "normal");
 
     const summaryData = [
-      ["Total Districts", Object.keys(districts).length],
+      ["Total Districts", sortedDistricts.length - (districts["Unknown"] ? 1 : 0)],
       ["Total Participants", totalParticipants],
       ["Group A Total", totalA],
       ["Group B Total", totalB],
@@ -271,6 +281,9 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
       headStyles: {
         fillColor: [220, 220, 220],
         textColor: [0, 0, 0],
+        fontStyle: "bold"
+      },
+      bodyStyles: {
         fontStyle: "bold"
       }
     });
