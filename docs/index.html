@@ -12,8 +12,10 @@
 
   <form id="dataForm">
     <div class="grid">
-      <input name="SL NO" placeholder="SL NO" type="number" required>
-      <input name="YEAR OF COMPETITION" placeholder="Year">
+      <label for="slno">SL NO</label>
+      <input type="number" id="slno" name="SL NO" readonly placeholder="Auto">
+      <label for="year">YEAR OF COMPETITION</label>
+      <input type="number" id="year" name="YEAR OF COMPETITION" readonly placeholder="Auto">
       <input name="DATE OF COMPETITION" type="date">
       <input name="DISTRICT" placeholder="District">
       <input name="BLOCK" placeholder="Block">
