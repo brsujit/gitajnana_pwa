@@ -3,120 +3,50 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SLGCC2025</title>
-  <link rel="manifest" href="manifest.webmanifest" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.0/jspdf.plugin.autotable.min.js"></script>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #fffaf5;
-      margin: 0;
-      padding: 20px;
-      color: #222;
-    }
-    h1 {
-      text-align: center;
-      color: maroon;
-    }
-    form {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 10px;
-      background: #fff;
-      padding: 15px;
-      border-radius: 10px;
-      box-shadow: 0 0 5px #ccc;
-    }
-    label {
-      font-weight: bold;
-      color: #333;
-    }
-    input {
-      padding: 6px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-    button {
-      padding: 10px 15px;
-      margin: 10px 5px;
-      border: none;
-      background: maroon;
-      color: #fff;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #e65c00;
-    }
-    table {
-      border-collapse: collapse;
-      width: 100%;
-      margin-top: 15px;
-      background: #fff;
-    }
-    th, td {
-      border: 1px solid #ccc;
-      padding: 5px;
-      text-align: center;
-    }
-    th {
-      background: #f8e5d3;
-      font-weight: bold;
-    }
-  </style>
+  <title>State level Gitachanting Competition Database</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <h1>State level Gita Chanting Competition Database</h1>
 
   <form id="dataForm">
-    <label for="slno">SL NO</label>
-    <input type="number" id="slno" name="SL NO" readonly placeholder="Auto" />
-
-    <label for="year">YEAR OF COMPETITION</label>
-    <input type="number" id="year" name="YEAR OF COMPETITION" readonly placeholder="Auto" />
-
-    <label for="date">DATE OF COMPETITION</label>
-    <input type="date" id="date" name="DATE OF COMPETITION" />
-
-    <label for="district">DISTRICT</label>
-    <input type="text" id="district" name="DISTRICT" required />
-
-    <label for="block">BLOCK</label>
-    <input type="text" id="block" name="BLOCK" required />
-
-    <label for="place">PLACE</label>
-    <input type="text" id="place" name="PLACE" required />
-
-    <label for="venue">VENUE</label>
-    <input type="text" id="venue" name="VENUE" required />
-
-    <label for="groupA">GROUP A</label>
-    <input type="number" id="groupA" name="GROUP A" value="0" />
-
-    <label for="groupB">GROUP B</label>
-    <input type="number" id="groupB" name="GROUP B" value="0" />
-
-    <label for="groupC">GROUP C</label>
-    <input type="number" id="groupC" name="GROUP C" value="0" />
-
-    <label for="groupD">GROUP D</label>
-    <input type="number" id="groupD" name="GROUP D" value="0" />
-
-    <label for="total">TOTAL NO OF PARTICIPANTS</label>
-    <input type="number" id="total" name="TOTAL NO OF PARTICIPANTS" value="0" readonly />
-
-    <button type="submit">Add Record</button>
+    <div class="grid">
+      <input name="SL NO" placeholder="SL NO" type="number" required>
+      <input name="YEAR OF COMPETITION" placeholder="Year">
+      <input name="DATE OF COMPETITION" type="date">
+      <input name="DISTRICT" placeholder="District">
+      <input name="BLOCK" placeholder="Block">
+      <input name="PLACE" placeholder="Place">
+      <input name="VENUE" placeholder="Venue">
+      <input name="GROUP A" type="number" placeholder="Group A">
+      <input name="GROUP B" type="number" placeholder="Group B">
+      <input name="GROUP C" type="number" placeholder="Group C">
+      <input name="GROUP D" type="number" placeholder="Group D">
+      <input name="TOTAL NO OF PARTICIPANTS" placeholder="Total">
+     <!--
+      <input name="DISTRICT COORDINATOR WITH CONTACT NO.1" placeholder="District Coord 1">
+      <input name="DISTRICT COORDINATOR WITH CONTACT NO.2" placeholder="District Coord 2">
+      <input name="BLOCK COORDINATOR WITH CONTACT NO.1" placeholder="Block Coord 1">
+      <input name="BLOCK COORDINATOR WITH CONTACT NO.2" placeholder="Block Coord 2">
+      -->
+    </div>
+    <button type="submit">Save Record</button>
   </form>
 
-  <div style="margin-top: 10px;">
+  <div class="toolbar">
+   <!-- <input id="searchDistrict" placeholder="Filter by District">-->
+    <!--<button id="exportBtn">Export CSV</button>-->
+    <input type="file" id="importFile" accept=".csv" hidden>
     <button id="importBtn">Import CSV</button>
-    <button id="exportBtn">Export CSV</button>
-    <button id="pdfBtn">Download PDF</button>
+    <button id="pdfBtn">Download PDF Report</button>
   </div>
 
   <table id="dataTable"></table>
+  <!-- Add jsPDF libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+<script src="app.js"></script>
 
-  <script src="app.js"></script>
 </body>
 </html>
