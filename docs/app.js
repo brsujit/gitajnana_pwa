@@ -16,6 +16,12 @@ try {
 } catch {
   console.error("Invalid JSON from server:", text);
   document.getElementById("dataTable").innerHTML = "<tr><td>Error loading data</td></tr>";
+  // Set next automatic values in form
+const slInput = document.getElementById("slno");
+const yearInput = document.getElementById("year");
+if (slInput) slInput.value = getNextSerialNumber();
+if (yearInput) yearInput.value = getCurrentYear();
+
   return;
 }
 
@@ -30,6 +36,19 @@ try {
     console.error(err);
     table.innerHTML = "<tr><td>Error loading data</td></tr>";
   }
+}
+
+// ========= AUTO SERIAL NUMBER & YEAR ===========
+function getNextSerialNumber() {
+  if (!allData || allData.length === 0) return 1;
+  const nums = allData
+    .map(r => Number(r["SL NO"] || 0))
+    .filter(n => !isNaN(n));
+  return nums.length ? Math.max(...nums) + 1 : 1;
+}
+
+function getCurrentYear() {
+  return new Date().getFullYear();
 }
 
 // ========= ADD RECORD ===========
@@ -48,7 +67,32 @@ async function addRecord(e) {
   } catch (err) {
     console.error(err);
     alert("Error adding record");
+  }document.getElementById("dataForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const record = Object.fromEntries(new FormData(e.target).entries());
+
+  // 🧮 Auto-generate fields
+  record["SL NO"] = getNextSerialNumber();
+  record["YEAR OF COMPETITION"] = getCurrentYear();
+
+  try {
+    await fetch(SHEET_URL, {
+      method: "POST",
+      body: JSON.stringify({ action: "add", record }),
+      headers: { "Content-Type": "application/json" }
+    });
+    alert(`Record #${record["SL NO"]} added successfully for ${record["YEAR OF COMPETITION"]}!`);
+    e.target.reset();
+    loadData();
+    // Refresh auto values in form
+    document.getElementById("slno").value = getNextSerialNumber();
+    document.getElementById("year").value = getCurrentYear();
+  } catch (err) {
+    console.error(err);
+    alert("Error adding record");
   }
+});
+
 }
 
 // ========= EXPORT CSV ===========
