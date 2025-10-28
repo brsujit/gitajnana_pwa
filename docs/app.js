@@ -196,8 +196,8 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
         "District Total"
       ];
 
-      // Build table rows
-      const tableBody = rows.map(r => {
+      // Build table rows — remove district repetition
+      const tableBody = rows.map((r, i) => {
         totalA += Number(r["GROUP A"] || 0);
         totalB += Number(r["GROUP B"] || 0);
         totalC += Number(r["GROUP C"] || 0);
@@ -205,7 +205,7 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
         totalParticipants += Number(r["TOTAL NO OF PARTICIPANTS"] || 0);
 
         return [
-          r["DISTRICT"] || "",
+          i === 0 ? (r["DISTRICT"] || "") : "", // ✅ show district only once
           r["BLOCK"] || "",
           r["PLACE"] || "",
           r["DATE OF COMPETITION"]
@@ -245,7 +245,7 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
           lineColor: [200, 200, 200],
           lineWidth: 0.1
         },
-        pageBreak: "avoid" // ✅ keeps table together
+        pageBreak: "avoid"
       });
 
       y = doc.lastAutoTable.finalY + 10;
