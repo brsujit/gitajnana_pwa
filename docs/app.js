@@ -137,10 +137,10 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
       return cleaned;
     });
 
-    // Group by District
+    // Group by District (rename missing to 'State Total')
     const districts = {};
     data.forEach(row => {
-      const district = row["DISTRICT"] || row["District"] || "Unknown";
+      const district = row["DISTRICT"]?.trim() || "State Total";
       if (!districts[district]) districts[district] = [];
       districts[district].push(row);
     });
@@ -164,7 +164,7 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
       doc.setFont(undefined, "normal");
       y += 5;
 
-      // Column order for PDF (added BLOCK)
+      // Column order for PDF
       const headers = [
         "District",
         "Block",
@@ -178,7 +178,7 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
         "District Total"
       ];
 
-      // Build table rows (show district in each row)
+      // Build table rows
       const tableBody = rows.map(r => [
         r["DISTRICT"] || "",
         r["BLOCK"] || "",
@@ -194,16 +194,16 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
         ""
       ]);
 
-      // Compute total for district
+      // Compute total for this district (or "State Total")
       const total = rows.reduce(
         (sum, r) => sum + Number(r["TOTAL NO OF PARTICIPANTS"] || 0),
         0
       );
 
       // Add total row
-      tableBody.push(["", "", "", "", "", "", "", "", "District Total", total.toString()]);
+      const totalLabel = district === "State Total" ? "State Total" : "District Total";
+      tableBody.push(["", "", "", "", "", "", "", "", totalLabel, total.toString()]);
 
-      // 🖨️ Draw table
       doc.autoTable({
         startY: y,
         head: [headers],
@@ -219,7 +219,7 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
           lineColor: [200, 200, 200],
           lineWidth: 0.1
         },
-        pageBreak: "avoid" // ✅ prevents district table from splitting across pages
+        pageBreak: "avoid" // prevent splitting district tables
       });
 
       y = doc.lastAutoTable.finalY + 10;
