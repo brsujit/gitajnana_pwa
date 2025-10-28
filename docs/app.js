@@ -137,10 +137,10 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
       return cleaned;
     });
 
-    // Group by District (rename missing to 'State Total')
+    // Group by District
     const districts = {};
     data.forEach(row => {
-      const district = row["DISTRICT"]?.trim() || "State Total";
+      const district = row["DISTRICT"]?.trim() || "Unknown";
       if (!districts[district]) districts[district] = [];
       districts[district].push(row);
     });
@@ -156,7 +156,16 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
 
     let y = 25;
 
+    // 🧮 State summary counters
+    let totalA = 0,
+      totalB = 0,
+      totalC = 0,
+      totalD = 0,
+      totalParticipants = 0;
+
     for (const [district, rows] of Object.entries(districts)) {
+      if (district === "Unknown") continue; // skip unknowns (for now)
+
       // 🟦 District Heading
       doc.setFont(undefined, "bold");
       doc.setTextColor(0, 0, 0);
@@ -179,30 +188,37 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
       ];
 
       // Build table rows
-      const tableBody = rows.map(r => [
-        r["DISTRICT"] || "",
-        r["BLOCK"] || "",
-        r["PLACE"] || "",
-        r["DATE OF COMPETITION"]
-          ? new Date(r["DATE OF COMPETITION"]).toLocaleDateString()
-          : "",
-        r["GROUP A"] || "",
-        r["GROUP B"] || "",
-        r["GROUP C"] || "",
-        r["GROUP D"] || "",
-        r["TOTAL NO OF PARTICIPANTS"] || "",
-        ""
-      ]);
+      const tableBody = rows.map(r => {
+        totalA += Number(r["GROUP A"] || 0);
+        totalB += Number(r["GROUP B"] || 0);
+        totalC += Number(r["GROUP C"] || 0);
+        totalD += Number(r["GROUP D"] || 0);
+        totalParticipants += Number(r["TOTAL NO OF PARTICIPANTS"] || 0);
 
-      // Compute total for this district (or "State Total")
+        return [
+          r["DISTRICT"] || "",
+          r["BLOCK"] || "",
+          r["PLACE"] || "",
+          r["DATE OF COMPETITION"]
+            ? new Date(r["DATE OF COMPETITION"]).toLocaleDateString()
+            : "",
+          r["GROUP A"] || "",
+          r["GROUP B"] || "",
+          r["GROUP C"] || "",
+          r["GROUP D"] || "",
+          r["TOTAL NO OF PARTICIPANTS"] || "",
+          ""
+        ];
+      });
+
+      // Compute total for district
       const total = rows.reduce(
         (sum, r) => sum + Number(r["TOTAL NO OF PARTICIPANTS"] || 0),
         0
       );
 
       // Add total row
-      const totalLabel = district === "State Total" ? "State Total" : "District Total";
-      tableBody.push(["", "", "", "", "", "", "", "", totalLabel, total.toString()]);
+      tableBody.push(["", "", "", "", "", "", "", "", "District Total", total.toString()]);
 
       doc.autoTable({
         startY: y,
@@ -219,7 +235,7 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
           lineColor: [200, 200, 200],
           lineWidth: 0.1
         },
-        pageBreak: "avoid" // prevent splitting district tables
+        pageBreak: "avoid"
       });
 
       y = doc.lastAutoTable.finalY + 10;
@@ -229,6 +245,37 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
       }
     }
 
+    // 🟩 Add STATE SUMMARY
+    doc.addPage();
+    doc.setFontSize(14);
+    doc.setFont(undefined, "bold");
+    doc.text("STATE SUMMARY", 130, 20);
+    doc.setFontSize(10);
+    doc.setFont(undefined, "normal");
+
+    const summaryData = [
+      ["Total Districts", Object.keys(districts).length],
+      ["Total Participants", totalParticipants],
+      ["Group A Total", totalA],
+      ["Group B Total", totalB],
+      ["Group C Total", totalC],
+      ["Group D Total", totalD],
+    ];
+
+    doc.autoTable({
+      startY: 30,
+      head: [["Description", "Total"]],
+      body: summaryData,
+      theme: "grid",
+      styles: { fontSize: 10, halign: "center" },
+      headStyles: {
+        fillColor: [220, 220, 220],
+        textColor: [0, 0, 0],
+        fontStyle: "bold"
+      }
+    });
+
+    // 💾 Save PDF
     doc.save("Gitajnana_District_Report.pdf");
   } catch (err) {
     console.error(err);
