@@ -157,16 +157,17 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
     let y = 25;
 
     for (const [district, rows] of Object.entries(districts)) {
-      // 🟦 District heading
+      // 🟦 District Heading
       doc.setFont(undefined, "bold");
       doc.setTextColor(0, 0, 0);
       doc.text(`District: ${district}`, 14, y);
       doc.setFont(undefined, "normal");
       y += 5;
 
-      // Column order for PDF
+      // Column order for PDF (added BLOCK)
       const headers = [
         "District",
+        "Block",
         "Place",
         "Date of Competition",
         "GROUP A",
@@ -177,9 +178,10 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
         "District Total"
       ];
 
-      // Build table rows (show district name in every row again)
+      // Build table rows (show district in each row)
       const tableBody = rows.map(r => [
         r["DISTRICT"] || "",
+        r["BLOCK"] || "",
         r["PLACE"] || "",
         r["DATE OF COMPETITION"]
           ? new Date(r["DATE OF COMPETITION"]).toLocaleDateString()
@@ -199,8 +201,9 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
       );
 
       // Add total row
-      tableBody.push(["", "", "", "", "", "", "", "District Total", total.toString()]);
+      tableBody.push(["", "", "", "", "", "", "", "", "District Total", total.toString()]);
 
+      // 🖨️ Draw table
       doc.autoTable({
         startY: y,
         head: [headers],
@@ -208,14 +211,15 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
         theme: "grid",
         styles: { fontSize: 8, halign: "center", valign: "middle" },
         headStyles: {
-          fillColor: [240, 240, 240], // light gray background
-          textColor: [0, 0, 0], // black text
+          fillColor: [240, 240, 240],
+          textColor: [0, 0, 0],
           fontStyle: "bold"
         },
         bodyStyles: {
           lineColor: [200, 200, 200],
           lineWidth: 0.1
-        }
+        },
+        pageBreak: "avoid" // ✅ prevents district table from splitting across pages
       });
 
       y = doc.lastAutoTable.finalY + 10;
