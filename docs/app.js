@@ -13,7 +13,9 @@ const SHEET_URL =
     "https://script.google.com/macros/s/AKfycbybyg1IjkS-bA-uQPQB11C3ZuvxzZLhfBWwiCso4398jSJEFExMmatA6deH8zlEO42xeg/exec"
   );
 
-// *** FIX: UPDATED THIS LIST TO MATCH YOUR EXACT ORDER ***
+// Your list of headers in the order you want them.
+// *** MAKE SURE THESE MATCH YOUR SHEET HEADERS EXACTLY ***
+// (The cleaning code below will help with minor spaces/newlines)
 const DISPLAY_HEADERS = [
   "SL NO",
   "YEAR OF COMPETITION",
@@ -34,7 +36,7 @@ const DISPLAY_HEADERS = [
 ];
 
 // ========= GLOBAL ===========
-let allData = [];
+let allData = []; // This will hold our cleaned data
 
 // ========= LOAD & DISPLAY ===========
 async function loadData() {
@@ -49,33 +51,50 @@ async function loadData() {
   try {
     const res = await fetch(SHEET_URL);
     const text = await res.text();
+    let rawData;
     try {
-      allData = JSON.parse(text);
+      rawData = JSON.parse(text);
     } catch {
       console.error("Invalid JSON from server:", text);
       table.innerHTML = "<tr><td>Error: Invalid data from server.</td></tr>";
       return;
     }
 
-    if (!allData.length) {
+    if (!rawData.length) {
       table.innerHTML = "<tr><td>No data found</td></tr>";
       return;
     }
-
-    // This 'headers' variable now uses your correct list
+    
+    // *** FIX 1 (BLANK COLUMNS): CLEAN THE DATA KEYS ONCE ***
+    // This cleans the headers from the Google Sheet (e.g., "SL. NO  " becomes "SL. NO")
+    // Note: This assumes your DISPLAY_HEADERS list is *also* clean.
+    allData = rawData.map((row) => {
+      const cleaned = {};
+      for (const key in row) {
+        const cleanKey = key.replace(/\n/g, " ").replace(/\s+/g, " ").trim();
+        cleaned[cleanKey] = row[key];
+      }
+      return cleaned;
+    });
+    
+    // Now we use the clean 'allData' to build the table
     const headers = DISPLAY_HEADERS;
     
     let html =
       "<tr>" + headers.map((h) => `<th>${h}</th>`).join("") + "</tr>";
     
-    // This loop relies on 'headers' being perfect.
-    // If 'r[h]' doesn't find a match (e.g., "SL NO" vs "SL. NO."),
-    // it will show an empty cell.
     allData.forEach((r) => {
       html +=
         "<tr>" + headers.map((h) => `<td>${r[h] ?? ""}</td>`).join("") + "</tr>";
     });
     table.innerHTML = html;
+    
+    // *** DEBUGGING STEP ***
+    // If columns are *still* blank, uncomment the line below.
+    // Open the console (F12) and see the *exact* keys from your sheet.
+    // Then, copy them perfectly into your DISPLAY_HEADERS array above.
+    // console.log("Actual data keys:", Object.keys(allData[0]));
+    
   } catch (err) {
     console.error(err);
     table.innerHTML = "<tr><td>Error loading data. Check console.</td></tr>";
@@ -94,7 +113,7 @@ async function addRecord(e) {
     });
     alert("Record added successfully!");
     e.target.reset();
-    loadData();
+    loadData(); // Reload data after adding
   } catch (err) {
     console.error(err);
     alert("Error adding record");
@@ -103,16 +122,15 @@ async function addRecord(e) {
 
 // ========= EXPORT CSV ===========
 async function exportCSV() {
-  try {
-    const res = await fetch(SHEET_URL);
-    const data = await res.json();
-    if (!data.length) return alert("No data to export!");
+  if (!allData.length) return alert("No data to export!");
 
+  try {
     // Use the fixed display headers for the CSV as well
     const headers = DISPLAY_HEADERS;
     const csv = [
       headers.join(","),
-      ...data.map((r) => headers.map((h) => `"${r[h] || ""}"`).join(",")),
+      // Use the global 'allData' (which is already clean)
+      ...allData.map((r) => headers.map((h) => `"${r[h] || ""}"`).join(",")),
     ].join("\n");
 
     const blob = new Blob([csv], { type: "text/csv" });
@@ -153,7 +171,7 @@ async function importCSV() {
     }
 
     alert("CSV imported successfully!");
-    loadData();
+    loadData(); // Reload data after import
   };
 
   input.click();
@@ -167,34 +185,17 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
     alert("Error: PDF library (jsPDF) not found. Please check HTML file.");
     return;
   }
+  
+  // *** FIX 2 (PDF SPEED): Use existing 'allData' instead of fetching ***
+  if (!allData || !allData.length) {
+    alert("No data available to generate PDF!");
+    return;
+  }
     
   try {
-    const res = await fetch(SHEET_URL);
-    const text = await res.text();
-    let data;
-
-    try {
-      data = JSON.parse(text);
-    } catch (e) {
-      console.error("Invalid JSON:", text);
-      alert("Could not load data for PDF!");
-      return;
-    }
-
-    if (!data.length) {
-      alert("No data available!");
-      return;
-    }
-
-    // 🧹 Clean keys
-    data = data.map((row) => {
-      const cleaned = {};
-      for (const key in row) {
-        const cleanKey = key.replace(/\n/g, " ").replace(/\s+/g, " ").trim();
-        cleaned[cleanKey] = row[key];
-      }
-      return cleaned;
-    });
+    // We already have the data, so no fetch is needed.
+    // 'allData' is already clean from the loadData() function.
+    const data = allData; 
 
     // 🧩 Group by District
     const districts = {};
