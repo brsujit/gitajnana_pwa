@@ -1,103 +1,34 @@
-/*
-  REMINDER: For the "Download PDF Report" button to work, you MUST
-  add these two <script> tags to your HTML file's <head> section:
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-*/
-
 // ========= CONFIG ===========
-const SHEET_URL =
-  "https://api.codetabs.com/v1/proxy?quest=" +
-  encodeURIComponent(
-    "https://script.google.com/macros/s/AKfycbybyg1IjkS-bA-uQPQB11C3ZuvxzZLhfBWwiCso4398jSJEFExMmatA6deH8zlEO42xeg/exec"
-  );
-
-// Your list of headers in the order you want them.
-// *** MAKE SURE THESE MATCH YOUR SHEET HEADERS EXACTLY ***
-// (The cleaning code below will help with minor spaces/newlines)
-const DISPLAY_HEADERS = [
-  "SL NO",
-  "YEAR OF COMPETITION",
-  "DATE OF COMPETITION",
-  "DISTRICT",
-  "BLOCK",
-  "PLACE",
-  "VENUE",
-  "GROUP A",
-  "GROUP B",
-  "GROUP C",
-  "GROUP D",
-  "TOTAL NO OF PARTICIPANTS",
-  "DISTRICT COORDINATOR WITH CONTACT NO.1",
-  "DISTRICT COORDINATOR WITH CONTACT NO.2",
-  "BLOCK COORDINATOR WITH CONTACT NO.1",
-  "BLOCK COORDINATOR WITH CONTACT NO.2",
-];
-
+const SHEET_URL = "https://api.allorigins.win/raw?url=" + encodeURIComponent("https://script.google.com/macros/s/AKfycbybyg1IjkS-bA-uQPQB11C3ZuvxzZLhfBWwiCso4398jSJEFExMmatA6deH8zlEO42xeg/exec");
 // ========= GLOBAL ===========
-let allData = []; // This will hold our cleaned data
+let allData = [];
 
 // ========= LOAD & DISPLAY ===========
 async function loadData() {
   const table = document.getElementById("dataTable");
-  if (!table) {
-    console.error("Fatal Error: Element with id 'dataTable' not found.");
-    alert("Fatal Error: Could not find table element. Check HTML.");
-    return;
-  }
   table.innerHTML = "<tr><td>Loading...</td></tr>";
 
   try {
     const res = await fetch(SHEET_URL);
-    const text = await res.text();
-    let rawData;
-    try {
-      rawData = JSON.parse(text);
-    } catch {
-      console.error("Invalid JSON from server:", text);
-      table.innerHTML = "<tr><td>Error: Invalid data from server.</td></tr>";
-      return;
-    }
+const text = await res.text();
+try {
+  allData = JSON.parse(text);
+} catch {
+  console.error("Invalid JSON from server:", text);
+  document.getElementById("dataTable").innerHTML = "<tr><td>Error loading data</td></tr>";
+  return;
+}
 
-    if (!rawData.length) {
-      table.innerHTML = "<tr><td>No data found</td></tr>";
-      return;
-    }
-    
-    // *** FIX 1 (BLANK COLUMNS): CLEAN THE DATA KEYS ONCE ***
-    // This cleans the headers from the Google Sheet (e.g., "SL. NO  " becomes "SL. NO")
-    // Note: This assumes your DISPLAY_HEADERS list is *also* clean.
-    allData = rawData.map((row) => {
-      const cleaned = {};
-      for (const key in row) {
-        const cleanKey = key.replace(/\n/g, " ").replace(/\s+/g, " ").trim();
-        cleaned[cleanKey] = row[key];
-      }
-      return cleaned;
-    });
-    
-    // Now we use the clean 'allData' to build the table
-    const headers = DISPLAY_HEADERS;
-    
-    let html =
-      "<tr>" + headers.map((h) => `<th>${h}</th>`).join("") + "</tr>";
-    
-    allData.forEach((r) => {
-      html +=
-        "<tr>" + headers.map((h) => `<td>${r[h] ?? ""}</td>`).join("") + "</tr>";
+
+    const headers = Object.keys(allData[0]);
+    let html = "<tr>" + headers.map(h => `<th>${h}</th>`).join("") + "</tr>";
+    allData.forEach(r => {
+      html += "<tr>" + headers.map(h => `<td>${r[h] ?? ""}</td>`).join("") + "</tr>";
     });
     table.innerHTML = html;
-    
-    // *** DEBUGGING STEP ***
-    // If columns are *still* blank, uncomment the line below.
-    // Open the console (F12) and see the *exact* keys from your sheet.
-    // Then, copy them perfectly into your DISPLAY_HEADERS array above.
-    // console.log("Actual data keys:", Object.keys(allData[0]));
-    
   } catch (err) {
     console.error(err);
-    table.innerHTML = "<tr><td>Error loading data. Check console.</td></tr>";
+    table.innerHTML = "<tr><td>Error loading data</td></tr>";
   }
 }
 
@@ -109,11 +40,11 @@ async function addRecord(e) {
     await fetch(SHEET_URL, {
       method: "POST",
       body: JSON.stringify({ action: "add", record }),
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json" }
     });
     alert("Record added successfully!");
     e.target.reset();
-    loadData(); // Reload data after adding
+    loadData();
   } catch (err) {
     console.error(err);
     alert("Error adding record");
@@ -122,15 +53,15 @@ async function addRecord(e) {
 
 // ========= EXPORT CSV ===========
 async function exportCSV() {
-  if (!allData.length) return alert("No data to export!");
-
   try {
-    // Use the fixed display headers for the CSV as well
-    const headers = DISPLAY_HEADERS;
+    const res = await fetch(SHEET_URL);
+    const data = await res.json();
+    if (!data.length) return alert("No data to export!");
+
+    const headers = Object.keys(data[0]);
     const csv = [
       headers.join(","),
-      // Use the global 'allData' (which is already clean)
-      ...allData.map((r) => headers.map((h) => `"${r[h] || ""}"`).join(",")),
+      ...data.map(r => headers.map(h => `"${r[h] || ""}"`).join(","))
     ].join("\n");
 
     const blob = new Blob([csv], { type: "text/csv" });
@@ -151,27 +82,27 @@ async function importCSV() {
   input.type = "file";
   input.accept = ".csv";
 
-  input.onchange = async (e) => {
+  input.onchange = async e => {
     const file = e.target.files[0];
     if (!file) return;
     const text = await file.text();
-    const [headerLine, ...lines] = text.split("\n").filter((l) => l.trim());
-    const headers = headerLine.split(",").map((h) => h.trim());
+    const [headerLine, ...lines] = text.split("\n").filter(l => l.trim());
+    const headers = headerLine.split(",").map(h => h.trim());
 
     for (const line of lines) {
       const vals = line.split(",");
       if (!vals.length) continue;
       const record = {};
-      headers.forEach((h, i) => (record[h] = vals[i]?.replace(/"/g, "").trim()));
+      headers.forEach((h, i) => record[h] = vals[i]?.replace(/"/g, "").trim());
       await fetch(SHEET_URL, {
         method: "POST",
         body: JSON.stringify({ action: "add", record }),
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json" }
       });
     }
 
     alert("CSV imported successfully!");
-    loadData(); // Reload data after import
+    loadData();
   };
 
   input.click();
@@ -179,49 +110,53 @@ async function importCSV() {
 
 // ========= PDF REPORT ===========
 document.getElementById("pdfBtn").addEventListener("click", async () => {
-  // Check if jsPDF is loaded
-  if (typeof window.jspdf === "undefined" || typeof window.jspdf.jsPDF === "undefined") {
-    console.error("jsPDF library is not loaded!");
-    alert("Error: PDF library (jsPDF) not found. Please check HTML file.");
-    return;
-  }
-  
-  // *** FIX 2 (PDF SPEED): Use existing 'allData' instead of fetching ***
-  if (!allData || !allData.length) {
-    alert("No data available to generate PDF!");
-    return;
-  }
-    
   try {
-    // We already have the data, so no fetch is needed.
-    // 'allData' is already clean from the loadData() function.
-    const data = allData; 
+    const res = await fetch(SHEET_URL);
+    const text = await res.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      console.error("Invalid JSON:", text);
+      alert("Could not load data for PDF!");
+      return;
+    }
+
+    if (!data.length) {
+      alert("No data available!");
+      return;
+    }
+
+    // 🧹 Clean keys
+    data = data.map(row => {
+      const cleaned = {};
+      for (const key in row) {
+        const cleanKey = key.replace(/\n/g, " ").replace(/\s+/g, " ").trim();
+        cleaned[cleanKey] = row[key];
+      }
+      return cleaned;
+    });
 
     // 🧩 Group by District
     const districts = {};
-    data.forEach((row) => {
+    data.forEach(row => {
       const district = row["DISTRICT"]?.trim() || "Unknown";
       if (!districts[district]) districts[district] = [];
       districts[district].push(row);
     });
 
+    // 🧮 Sort districts alphabetically
     const sortedDistricts = Object.keys(districts).sort((a, b) =>
       a.localeCompare(b)
     );
 
+    // Create PDF (Portrait)
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({
       orientation: "portrait",
       unit: "mm",
-      format: "a4",
+      format: "a4"
     });
-
-    // Check for autoTable plugin
-    if (typeof doc.autoTable === "undefined") {
-       console.error("jsPDF-AutoTable plugin is not loaded!");
-       alert("Error: PDF library (jsPDF-AutoTable) not found. Please check HTML file.");
-       return;
-    }
 
     // === HEADING ===
     doc.setFontSize(14);
@@ -235,9 +170,10 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
     );
 
     doc.setFont(undefined, "normal");
-    doc.setFontSize(9);
+    doc.setFontSize(10);
 
-    const pdfHeaders = [ // PDF headers are separate from the main table
+    // === HEADERS ===
+    const headers = [
       "SL. NO.",
       "District",
       "Block",
@@ -247,14 +183,15 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
       "B",
       "C",
       "D",
-      "Total",
+      "Total"
     ];
 
+    // === Totals ===
     let stateTotals = { A: 0, B: 0, C: 0, D: 0, total: 0 };
     const uniquePlaces = new Set();
     const tableBody = [];
 
-    // === Build Table ===
+    // === Build District Rows ===
     for (const district of sortedDistricts) {
       const rows = districts[district];
       if (district === "Unknown") continue;
@@ -264,7 +201,6 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
       let districtTotals = { A: 0, B: 0, C: 0, D: 0, total: 0 };
 
       rows.forEach((r, i) => {
-        // We use the cleaned keys here
         const A = Number(r["GROUP A"] || 0);
         const B = Number(r["GROUP B"] || 0);
         const C = Number(r["GROUP C"] || 0);
@@ -297,7 +233,7 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
           B || "",
           C || "",
           D || "",
-          total || "",
+          total || ""
         ]);
       });
 
@@ -306,13 +242,13 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
         "",
         "",
         "",
-        "Summary",
+        { content: "Summary", styles: { fontStyle: "bold", halign: "right" } },
         "",
-        districtTotals.A,
-        districtTotals.B,
-        districtTotals.C,
-        districtTotals.D,
-        districtTotals.total,
+        districtTotals.A.toString(),
+        districtTotals.B.toString(),
+        districtTotals.C.toString(),
+        districtTotals.D.toString(),
+        districtTotals.total.toString()
       ]);
     }
 
@@ -321,42 +257,44 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
       "",
       "",
       "",
-      `STATE TOTAL (${uniquePlaces.size} Places)`,
+      {
+        content: `STATE TOTAL (${uniquePlaces.size} Places)`,
+        styles: { fontStyle: "bold", halign: "right" }
+      },
       "",
-      stateTotals.A,
-      stateTotals.B,
-      stateTotals.C,
-      stateTotals.D,
-      stateTotals.total,
+      stateTotals.A.toString(),
+      stateTotals.B.toString(),
+      stateTotals.C.toString(),
+      stateTotals.D.toString(),
+      stateTotals.total.toString()
     ]);
 
     // === Render Table ===
     doc.autoTable({
       startY: 25,
-      head: [pdfHeaders],
+      head: [headers],
       body: tableBody,
       theme: "grid",
       styles: {
         fontSize: 8,
-        cellPadding: 1.5,
+        cellPadding: 1,
         halign: "center",
-        valign: "middle",
+        valign: "middle"
       },
       headStyles: {
         fillColor: [230, 230, 230],
         textColor: [0, 0, 0],
-        fontStyle: "bold",
+        fontStyle: "bold"
       },
       bodyStyles: {
-        lineColor: [180, 180, 180],
-        lineWidth: 0.1,
+        lineColor: [200, 200, 200],
+        lineWidth: 0.1
       },
       margin: { top: 25, left: 8, right: 8 },
-      tableWidth: "wrap",
-      pageBreak: "auto",
+      tableWidth: "auto",
+      pageBreak: "auto"
     });
 
-    // === Save ===
     doc.save("Gitajnana_Report.pdf");
   } catch (err) {
     console.error(err);
@@ -364,33 +302,13 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
   }
 });
 
+
 // ========= INIT ===========
 window.addEventListener("DOMContentLoaded", () => {
-  const pdfBtn = document.getElementById("pdfBtn");
-  const importBtn = document.getElementById("importBtn");
-  const exportBtn = document.getElementById("exportBtn");
-  const dataForm = document.getElementById("dataForm");
-  
-  if (!pdfBtn) console.error("Error: Button with id 'pdfBtn' not found.");
-  
-  if (importBtn) {
-    importBtn.addEventListener("click", importCSV);
-  } else {
-    console.error("Error: Button with id 'importBtn' not found.");
-  }
-
-  if (exportBtn) {
-    exportBtn.addEventListener("click", exportCSV);
-  } else {
-    console.error("Error: Button with id 'exportBtn' not found.");
-  }
-  
-  if (dataForm) {
-    dataForm.addEventListener("submit", addRecord);
-  } else {
-    console.error("Error: Form with id 'dataForm' not found.");
-  }
-  
-  // Load the initial data once the page is ready
-  loadData();
+  document.getElementById("importBtn").addEventListener("click", importCSV);
+  document.getElementById("exportBtn").addEventListener("click", exportCSV);
+  document.getElementById("pdfBtn").addEventListener("click", generatePDF);
+  document.getElementById("dataForm").addEventListener("submit", addRecord);
 });
+
+window.addEventListener("load", loadData);
