@@ -303,6 +303,9 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
       pageBreak: "auto"
     });
 
+    console.log("Unique Places Count:", uniquePlaces.size);
+console.log("Unique Places List:", Array.from(uniquePlaces));
+
     doc.save("Gitajnana_Report.pdf");
   } catch (err) {
     console.error(err);
