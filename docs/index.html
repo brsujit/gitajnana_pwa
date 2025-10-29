@@ -1,56 +1,51 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>State level Gitachanting Competition Database</title>
-  <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="style.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>State level Gita Chanting Competition</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .controls { margin-bottom: 20px; display: flex; gap: 10px; }
+        button { padding: 10px 15px; cursor: pointer; }
+        form { background: #f9f9f9; border: 1px solid #ccc; padding: 15px; margin-top: 20px; }
+    </style>
 </head>
 <body>
-  <h1>State level Gita Chanting Competition Database</h1>
 
- <!----
-  <form id="dataForm">
-    <div class="grid">
-      <input name="SL NO" placeholder="SL NO" type="number" required>      
-      <input name="YEAR OF COMPETITION" placeholder="Year">
-      <input name="DATE OF COMPETITION" type="date">
-      <input name="DISTRICT" placeholder="District">
-      <input name="BLOCK" placeholder="Block">
-      <input name="PLACE" placeholder="Place">
-      <input name="VENUE" placeholder="Venue">
-      <input name="GROUP A" type="number" placeholder="Group A">
-      <input name="GROUP B" type="number" placeholder="Group B">
-      <input name="GROUP C" type="number" placeholder="Group C">
-      <input name="GROUP D" type="number" placeholder="Group D">
-      <input name="TOTAL NO OF PARTICIPANTS" placeholder="Total">
-     
-      <input name="DISTRICT COORDINATOR WITH CONTACT NO.1" placeholder="District Coord 1">
-      <input name="DISTRICT COORDINATOR WITH CONTACT NO.2" placeholder="District Coord 2">
-      <input name="BLOCK COORDINATOR WITH CONTACT NO.1" placeholder="Block Coord 1">
-      <input name="BLOCK COORDINATOR WITH CONTACT NO.2" placeholder="Block Coord 2">
-      
+    <h1>Gita Chanting Competition Database</h1>
+
+    <div class="controls">
+        <button id="pdfBtn">Download PDF Report</button>
+        <button id="exportBtn">Export as CSV</button>
+        <button id="importBtn">Import from CSV</button>
     </div>
-    <button type="submit">Save Record</button>
-  </form>
--->
 
-  <div class="toolbar">
-   <!-- <input id="searchDistrict" placeholder="Filter by District">
-    <button id="exportBtn">Export CSV</button>
-    <input type="file" id="importFile" accept=".csv" hidden>
-    <button id="importBtn">Import CSV</button>-->
-    <button id="pdfBtn">Download PDF Report</button>
-  </div>
+    <form id="dataForm">
+        <h3>Add New Record</h3>
+        <p>
+            Note: This form is a placeholder. You must add input fields 
+            with 'name' attributes matching your column headers.
+            <br>
+            Example: &lt;input name="DISTRICT" placeholder="District Name"&gt;
+        </p>
+        <button type="submit">Add Record</button>
+    </form>
 
-  <table id="dataTable"></table>
-  <!-- Add jsPDF libraries -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-<script src="app.js"></script>
+    <div style="overflow-x: auto;">
+        <table id="dataTable">
+            <tr><td>Loading...</td></tr>
+        </table>
+    </div>
+
+    <script src="app.js" defer></script>
 
 </body>
 </html>
