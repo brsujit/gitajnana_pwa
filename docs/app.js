@@ -137,53 +137,57 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
       return cleaned;
     });
 
-    // 🧩 Group by district and sort alphabetically
+    // 🧩 Group by district
     const districts = {};
     data.forEach(row => {
       const d = row["DISTRICT"]?.trim() || "Unknown";
       if (!districts[d]) districts[d] = [];
       districts[d].push(row);
     });
+
     const sortedDistricts = Object.keys(districts).sort((a, b) => a.localeCompare(b));
 
-    // 🧮 Create PDF (A4 landscape)
+    // 📄 Create portrait PDF (A4)
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({
-      orientation: "landscape",
+      orientation: "portrait",
       unit: "mm",
       format: "a4"
     });
 
     // 🏷️ Title
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(14);
+    doc.setFontSize(13);
     doc.text("STATE LEVEL GITA CHANTING COMPETITION REPORT", 14, 15);
     doc.setFontSize(10);
-    doc.text("District-wise Participant Summary", 14, 22);
+    doc.text("District-wise Summary", 14, 21);
 
     // 🧾 Define headers
     const headers = [
       "District",
       "Block",
       "Place",
-      "Date of Competition",
+      "Date",
       "GROUP A",
       "GROUP B",
       "GROUP C",
       "GROUP D",
-      "TOTAL NO OF PARTICIPANTS"
+      "Total"
     ];
 
+    const { autoTable } = doc;
     const tableBody = [];
 
-    // 🧮 Grand Totals
-    let totalA = 0, totalB = 0, totalC = 0, totalD = 0, totalParticipants = 0;
+    // 🧮 Grand totals
+    let grandA = 0, grandB = 0, grandC = 0, grandD = 0, grandTotal = 0;
 
     for (const district of sortedDistricts) {
       const rows = districts[district];
       if (district === "Unknown") continue;
 
       rows.sort((a, b) => (a["BLOCK"] || "").localeCompare(b["BLOCK"] || ""));
+
+      let distA = 0, distB = 0, distC = 0, distD = 0, distTotal = 0;
 
       rows.forEach((r, i) => {
         const a = Number(r["GROUP A"] || 0);
@@ -192,14 +196,20 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
         const d = Number(r["GROUP D"] || 0);
         const total = Number(r["TOTAL NO OF PARTICIPANTS"] || 0);
 
-        totalA += a;
-        totalB += b;
-        totalC += c;
-        totalD += d;
-        totalParticipants += total;
+        distA += a;
+        distB += b;
+        distC += c;
+        distD += d;
+        distTotal += total;
+
+        grandA += a;
+        grandB += b;
+        grandC += c;
+        grandD += d;
+        grandTotal += total;
 
         tableBody.push([
-          i === 0 ? district : "", // show district name only once
+          i === 0 ? district : "",
           r["BLOCK"] || "",
           r["PLACE"] || "",
           r["DATE OF COMPETITION"]
@@ -212,32 +222,45 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
           total || ""
         ]);
       });
+
+      // 🟩 District Summary Row
+      tableBody.push([
+        `${district} Summary`,
+        "",
+        "",
+        "",
+        distA.toString(),
+        distB.toString(),
+        distC.toString(),
+        distD.toString(),
+        distTotal.toString()
+      ]);
     }
 
-    // 🟩 Add total row
+    // 🟦 State Total Row
     tableBody.push([
       "STATE TOTAL",
       "",
       "",
       "",
-      totalA.toString(),
-      totalB.toString(),
-      totalC.toString(),
-      totalD.toString(),
-      totalParticipants.toString()
+      grandA.toString(),
+      grandB.toString(),
+      grandC.toString(),
+      grandD.toString(),
+      grandTotal.toString()
     ]);
 
-    // 🧾 Render table (auto-fit to A4 width)
+    // 🧾 Render Table
     doc.autoTable({
       startY: 28,
       head: [headers],
       body: tableBody,
       theme: "grid",
       styles: {
-        fontSize: 8,
+        fontSize: 7.5,
         halign: "center",
         valign: "middle",
-        cellPadding: 1.5
+        cellPadding: 1.2
       },
       headStyles: {
         fillColor: [220, 220, 220],
@@ -248,27 +271,41 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
         lineColor: [200, 200, 200],
         lineWidth: 0.1
       },
-      tableWidth: "auto",
+      columnStyles: {
+        0: { cellWidth: 28 }, // District
+        1: { cellWidth: 25 }, // Block
+        2: { cellWidth: 30 }, // Place
+        3: { cellWidth: 18 }, // Date
+        4: { cellWidth: 14 }, // A
+        5: { cellWidth: 14 }, // B
+        6: { cellWidth: 14 }, // C
+        7: { cellWidth: 14 }, // D
+        8: { cellWidth: 18 }  // Total
+      },
       margin: { top: 25, left: 10, right: 10, bottom: 15 },
       didParseCell: function (data) {
-        if (data.row.index === tableBody.length - 1) {
-          // Highlight total row
+        const cellText = data.cell.raw;
+        if (typeof cellText === "string" && cellText.includes("Summary")) {
           data.cell.styles.fontStyle = "bold";
-          data.cell.styles.fillColor = [245, 245, 245];
+          data.cell.styles.fillColor = [240, 240, 240];
+        }
+        if (data.row.index === tableBody.length - 1) {
+          data.cell.styles.fontStyle = "bold";
+          data.cell.styles.fillColor = [220, 220, 220];
         }
       }
     });
 
-    // 📄 Footer (page number)
+    // 📄 Footer Page Numbers
     const pageCount = doc.internal.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i);
       doc.setFontSize(8);
-      doc.text(`Page ${i} of ${pageCount}`, 270, 200, { align: "right" });
+      doc.text(`Page ${i} of ${pageCount}`, 200, 287, { align: "right" });
     }
 
-    // 💾 Save file
-    doc.save("Gitajnana_State_Report.pdf");
+    // 💾 Save PDF
+    doc.save("Gitajnana_Report.pdf");
   } catch (err) {
     console.error(err);
     alert("Failed to generate PDF!");
