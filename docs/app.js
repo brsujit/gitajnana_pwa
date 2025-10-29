@@ -219,7 +219,15 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
         stateTotals.D += D;
         stateTotals.total += total;
 
-        if (r["PLACE"]) uniquePlaces.add(r["PLACE"].trim());
+       if (r["PLACE"]) {
+  const cleanPlace = r["PLACE"]
+    .replace(/\s+/g, " ")     // collapse extra spaces
+    .replace(/[^\w\s]/g, "")  // remove hidden or special chars
+    .trim()
+    .toUpperCase();           // case-insensitive uniqueness
+  if (cleanPlace) uniquePlaces.add(cleanPlace);
+}
+
 
         tableBody.push([
           i + 1,
