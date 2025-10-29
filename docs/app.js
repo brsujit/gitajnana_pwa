@@ -127,7 +127,7 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
       return;
     }
 
-    // 🧹 Normalize keys (remove newlines, trim spaces)
+    // 🧹 Clean up headers
     data = data.map(row => {
       const cleaned = {};
       for (const key in row) {
@@ -137,18 +137,15 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
       return cleaned;
     });
 
-    // 🧩 Group by District
+    // 🧩 Group by District and sort
     const districts = {};
     data.forEach(row => {
-      const district = row["DISTRICT"]?.trim() || "Unknown";
-      if (!districts[district]) districts[district] = [];
-      districts[district].push(row);
+      const d = row["DISTRICT"]?.trim() || "Unknown";
+      if (!districts[d]) districts[d] = [];
+      districts[d].push(row);
     });
 
-    // 🧮 Sort districts alphabetically
-    const sortedDistricts = Object.keys(districts).sort((a, b) =>
-      a.localeCompare(b)
-    );
+    const sortedDistricts = Object.keys(districts).sort((a, b) => a.localeCompare(b));
 
     // Create PDF
     const { jsPDF } = window.jspdf;
@@ -157,105 +154,94 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
     doc.setFontSize(16);
     doc.setTextColor(0, 0, 0);
     doc.text("Gitajnana Examination – District-wise Participants Report", 14, 15);
-    doc.setFontSize(10);
+    doc.setFontSize(9);
 
-    let y = 25;
+    // 🧮 Totals for State Summary
+    let totalA = 0, totalB = 0, totalC = 0, totalD = 0, totalParticipants = 0;
 
-    // 🧮 State summary counters
-    let totalA = 0,
-      totalB = 0,
-      totalC = 0,
-      totalD = 0,
-      totalParticipants = 0;
+    // 🧾 Combined Table Rows
+    const tableBody = [];
 
     for (const district of sortedDistricts) {
       const rows = districts[district];
       if (district === "Unknown") continue;
 
-      // 🟦 Sort blocks alphabetically within district
+      // District title row (merged-like)
+      tableBody.push([`DISTRICT: ${district}`, "", "", "", "", "", "", "", "", ""]);
+
+      // Sort by Block
       rows.sort((a, b) => (a["BLOCK"] || "").localeCompare(b["BLOCK"] || ""));
 
-      // 🟦 District Heading
-      doc.setFont(undefined, "bold");
-      doc.setTextColor(0, 0, 0);
-      doc.text(`District: ${district}`, 14, y);
-      doc.setFont(undefined, "normal");
-      y += 5;
+      let districtTotal = 0;
+      rows.forEach(r => {
+        const a = Number(r["GROUP A"] || 0);
+        const b = Number(r["GROUP B"] || 0);
+        const c = Number(r["GROUP C"] || 0);
+        const d = Number(r["GROUP D"] || 0);
+        const total = Number(r["TOTAL NO OF PARTICIPANTS"] || 0);
 
-      // Column order for PDF
-      const headers = [
-        "District",
-        "Block",
-        "Place",
-        "Date of Competition",
-        "GROUP A",
-        "GROUP B",
-        "GROUP C",
-        "GROUP D",
-        "TOTAL NO OF PARTICIPANTS",
-        "District Total"
-      ];
+        totalA += a;
+        totalB += b;
+        totalC += c;
+        totalD += d;
+        totalParticipants += total;
+        districtTotal += total;
 
-      // Build table rows — remove district repetition
-      const tableBody = rows.map((r, i) => {
-        totalA += Number(r["GROUP A"] || 0);
-        totalB += Number(r["GROUP B"] || 0);
-        totalC += Number(r["GROUP C"] || 0);
-        totalD += Number(r["GROUP D"] || 0);
-        totalParticipants += Number(r["TOTAL NO OF PARTICIPANTS"] || 0);
-
-        return [
-          i === 0 ? (r["DISTRICT"] || "") : "", // ✅ show district only once
+        tableBody.push([
+          r["DISTRICT"] || "",
           r["BLOCK"] || "",
           r["PLACE"] || "",
           r["DATE OF COMPETITION"]
             ? new Date(r["DATE OF COMPETITION"]).toLocaleDateString()
             : "",
-          r["GROUP A"] || "",
-          r["GROUP B"] || "",
-          r["GROUP C"] || "",
-          r["GROUP D"] || "",
-          r["TOTAL NO OF PARTICIPANTS"] || "",
+          a || "",
+          b || "",
+          c || "",
+          d || "",
+          total || "",
           ""
-        ];
+        ]);
       });
 
-      // Compute total for district
-      const total = rows.reduce(
-        (sum, r) => sum + Number(r["TOTAL NO OF PARTICIPANTS"] || 0),
-        0
-      );
-
-      // Add total row
-      tableBody.push(["", "", "", "", "", "", "", "", "District Total", total.toString()]);
-
-      // Draw table
-      doc.autoTable({
-        startY: y,
-        head: [headers],
-        body: tableBody,
-        theme: "grid",
-        styles: { fontSize: 8, halign: "center", valign: "middle" },
-        headStyles: {
-          fillColor: [240, 240, 240],
-          textColor: [0, 0, 0],
-          fontStyle: "bold"
-        },
-        bodyStyles: {
-          lineColor: [200, 200, 200],
-          lineWidth: 0.1
-        },
-        pageBreak: "avoid"
-      });
-
-      y = doc.lastAutoTable.finalY + 10;
-      if (y > 180) {
-        doc.addPage();
-        y = 25;
-      }
+      // Add district total row
+      tableBody.push(["", "", "", "", "", "", "", "", "District Total", districtTotal.toString()]);
+      tableBody.push(["", "", "", "", "", "", "", "", "", ""]); // spacer row
     }
 
-    // 🟩 STATE SUMMARY PAGE
+    // 🟩 Headers
+    const headers = [
+      "District",
+      "Block",
+      "Place",
+      "Date of Competition",
+      "GROUP A",
+      "GROUP B",
+      "GROUP C",
+      "GROUP D",
+      "TOTAL NO OF PARTICIPANTS",
+      "District Total"
+    ];
+
+    // 🧾 Draw one single table
+    doc.autoTable({
+      startY: 25,
+      head: [headers],
+      body: tableBody,
+      theme: "grid",
+      styles: { fontSize: 8, halign: "center", valign: "middle" },
+      headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: "bold" },
+      bodyStyles: { lineColor: [200, 200, 200], lineWidth: 0.1 },
+      didParseCell: function (data) {
+        // Make "DISTRICT:" rows bold and left-aligned
+        if (data.cell.raw && String(data.cell.raw).startsWith("DISTRICT:")) {
+          data.cell.styles.fontStyle = "bold";
+          data.cell.styles.halign = "left";
+          data.cell.colSpan = 10;
+        }
+      },
+    });
+
+    // 🟨 State summary page
     doc.addPage();
     doc.setFontSize(14);
     doc.setFont(undefined, "bold");
@@ -278,17 +264,10 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
       body: summaryData,
       theme: "grid",
       styles: { fontSize: 10, halign: "center" },
-      headStyles: {
-        fillColor: [220, 220, 220],
-        textColor: [0, 0, 0],
-        fontStyle: "bold"
-      },
-      bodyStyles: {
-        fontStyle: "bold"
-      }
+      headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontStyle: "bold" },
+      bodyStyles: { fontStyle: "bold" },
     });
 
-    // 💾 Save PDF
     doc.save("Gitajnana_District_Report.pdf");
   } catch (err) {
     console.error(err);
