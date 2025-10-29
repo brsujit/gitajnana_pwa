@@ -258,7 +258,7 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
       "",
       "",
       "",
-      { content: `STATE TOTAL (${totalBlocks} Blocks)`, styles: { fontStyle: "bold", halign: "right" } },
+      { content: `STATE TOTAL (${uniquePlaces.size} Places)`, styles: { fontStyle: "bold", halign: "right" } },
       "",
       stateTotals.A.toString(),
       stateTotals.B.toString(),
