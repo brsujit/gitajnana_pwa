@@ -127,7 +127,7 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
       return;
     }
 
-    // 🧹 Normalize keys
+    // 🧹 Clean keys
     data = data.map(row => {
       const cleaned = {};
       for (const key in row) {
@@ -150,7 +150,7 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
       a.localeCompare(b)
     );
 
-    // Create PDF in portrait
+    // Create PDF (Portrait)
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({
       orientation: "portrait",
@@ -158,14 +158,23 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
       format: "a4"
     });
 
+    // === HEADING ===
     doc.setFontSize(14);
     doc.setTextColor(0, 0, 0);
     doc.setFont(undefined, "bold");
-    doc.text("Gitajnana Examination – District-wise Participants Report", 14, 15);
-    doc.setFont(undefined, "normal");
+    doc.text(
+      "7TH ODISHA STATE LEVEL GEETA CHANTING COMPETITION 2025",
+      105,
+      15,
+      { align: "center" }
+    );
 
-    // Column order and headers
+    doc.setFont(undefined, "normal");
+    doc.setFontSize(10);
+
+    // === HEADERS ===
     const headers = [
+      "SL. NO.",
       "District",
       "Block",
       "Place",
@@ -177,19 +186,20 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
       "Total"
     ];
 
-    // State-level totals
+    // === Totals ===
     let stateTotals = { A: 0, B: 0, C: 0, D: 0, total: 0 };
+    let totalBlocks = 0;
     const tableBody = [];
 
-    // Build rows for all districts (continuous table)
+    // === Build District Rows ===
     for (const district of sortedDistricts) {
       const rows = districts[district];
       if (district === "Unknown") continue;
 
-      // Sort by block name
       rows.sort((a, b) => (a["BLOCK"] || "").localeCompare(b["BLOCK"] || ""));
 
       let districtTotals = { A: 0, B: 0, C: 0, D: 0, total: 0 };
+      let blockCount = 0;
 
       rows.forEach((r, i) => {
         const A = Number(r["GROUP A"] || 0);
@@ -203,14 +213,17 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
         districtTotals.C += C;
         districtTotals.D += D;
         districtTotals.total += total;
+        blockCount++;
 
         stateTotals.A += A;
         stateTotals.B += B;
         stateTotals.C += C;
         stateTotals.D += D;
         stateTotals.total += total;
+        totalBlocks++;
 
         tableBody.push([
+          i + 1,
           i === 0 ? district : "",
           r["BLOCK"] || "",
           r["PLACE"] || "",
@@ -225,12 +238,13 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
         ]);
       });
 
-      // Add “Summary” row after each district
+      // District Summary Row
       tableBody.push([
         "",
         "",
         "",
         { content: "Summary", styles: { fontStyle: "bold", halign: "right" } },
+        "",
         districtTotals.A.toString(),
         districtTotals.B.toString(),
         districtTotals.C.toString(),
@@ -239,12 +253,13 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
       ]);
     }
 
-    // Add State Summary Row
+    // === State Total Row ===
     tableBody.push([
       "",
       "",
       "",
-      { content: "STATE TOTAL", styles: { fontStyle: "bold", halign: "right" } },
+      { content: `STATE TOTAL (${totalBlocks} Blocks)`, styles: { fontStyle: "bold", halign: "right" } },
+      "",
       stateTotals.A.toString(),
       stateTotals.B.toString(),
       stateTotals.C.toString(),
@@ -252,7 +267,7 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
       stateTotals.total.toString()
     ]);
 
-    // Draw the unified table
+    // === Render Table ===
     doc.autoTable({
       startY: 25,
       head: [headers],
@@ -273,12 +288,11 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
         lineColor: [200, 200, 200],
         lineWidth: 0.1
       },
-      margin: { top: 25, left: 10, right: 10 },
+      margin: { top: 25, left: 8, right: 8 },
       tableWidth: "auto",
       pageBreak: "auto"
     });
 
-    // Save PDF
     doc.save("Gitajnana_Report.pdf");
   } catch (err) {
     console.error(err);
