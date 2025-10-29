@@ -1,5 +1,9 @@
 // ========= CONFIG ===========
-const SHEET_URL = "https://api.codetabs.com/v1/proxy?quest=" + encodeURIComponent("https://script.google.com/macros/s/AKfycbybyg1IjkS-bA-uQPQB11C3ZuvxzZLhfBWwiCso4398jSJEFExMmatA6deH8zlEO42xeg/exec");
+const SHEET_URL =
+  "https://api.codetabs.com/v1/proxy?quest=" +
+  encodeURIComponent(
+    "https://script.google.com/macros/s/AKfycbybyg1IjkS-bA-uQPQB11C3ZuvxzZLhfBWwiCso4398jSJEFExMmatA6deH8zlEO42xeg/exec"
+  );
 
 // ========= GLOBAL ===========
 let allData = [];
@@ -11,20 +15,26 @@ async function loadData() {
 
   try {
     const res = await fetch(SHEET_URL);
-const text = await res.text();
-try {
-  allData = JSON.parse(text);
-} catch {
-  console.error("Invalid JSON from server:", text);
-  document.getElementById("dataTable").innerHTML = "<tr><td>Error loading data</td></tr>";
-  return;
-}
+    const text = await res.text();
+    try {
+      allData = JSON.parse(text);
+    } catch {
+      console.error("Invalid JSON from server:", text);
+      table.innerHTML = "<tr><td>Error loading data</td></tr>";
+      return;
+    }
 
+    if (!allData.length) {
+      table.innerHTML = "<tr><td>No data found</td></tr>";
+      return;
+    }
 
     const headers = Object.keys(allData[0]);
-    let html = "<tr>" + headers.map(h => `<th>${h}</th>`).join("") + "</tr>";
-    allData.forEach(r => {
-      html += "<tr>" + headers.map(h => `<td>${r[h] ?? ""}</td>`).join("") + "</tr>";
+    let html =
+      "<tr>" + headers.map((h) => `<th>${h}</th>`).join("") + "</tr>";
+    allData.forEach((r) => {
+      html +=
+        "<tr>" + headers.map((h) => `<td>${r[h] ?? ""}</td>`).join("") + "</tr>";
     });
     table.innerHTML = html;
   } catch (err) {
@@ -41,7 +51,7 @@ async function addRecord(e) {
     await fetch(SHEET_URL, {
       method: "POST",
       body: JSON.stringify({ action: "add", record }),
-      headers: { "Content-Type": "application/json" }
+      headers: { "Content-Type": "application/json" },
     });
     alert("Record added successfully!");
     e.target.reset();
@@ -62,7 +72,7 @@ async function exportCSV() {
     const headers = Object.keys(data[0]);
     const csv = [
       headers.join(","),
-      ...data.map(r => headers.map(h => `"${r[h] || ""}"`).join(","))
+      ...data.map((r) => headers.map((h) => `"${r[h] || ""}"`).join(",")),
     ].join("\n");
 
     const blob = new Blob([csv], { type: "text/csv" });
@@ -83,22 +93,22 @@ async function importCSV() {
   input.type = "file";
   input.accept = ".csv";
 
-  input.onchange = async e => {
+  input.onchange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
     const text = await file.text();
-    const [headerLine, ...lines] = text.split("\n").filter(l => l.trim());
-    const headers = headerLine.split(",").map(h => h.trim());
+    const [headerLine, ...lines] = text.split("\n").filter((l) => l.trim());
+    const headers = headerLine.split(",").map((h) => h.trim());
 
     for (const line of lines) {
       const vals = line.split(",");
       if (!vals.length) continue;
       const record = {};
-      headers.forEach((h, i) => record[h] = vals[i]?.replace(/"/g, "").trim());
+      headers.forEach((h, i) => (record[h] = vals[i]?.replace(/"/g, "").trim()));
       await fetch(SHEET_URL, {
         method: "POST",
         body: JSON.stringify({ action: "add", record }),
-        headers: { "Content-Type": "application/json" }
+        headers: { "Content-Type": "application/json" },
       });
     }
 
@@ -115,6 +125,7 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
     const res = await fetch(SHEET_URL);
     const text = await res.text();
     let data;
+
     try {
       data = JSON.parse(text);
     } catch (e) {
@@ -129,7 +140,7 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
     }
 
     // 🧹 Clean keys
-    data = data.map(row => {
+    data = data.map((row) => {
       const cleaned = {};
       for (const key in row) {
         const cleanKey = key.replace(/\n/g, " ").replace(/\s+/g, " ").trim();
@@ -140,23 +151,21 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
 
     // 🧩 Group by District
     const districts = {};
-    data.forEach(row => {
+    data.forEach((row) => {
       const district = row["DISTRICT"]?.trim() || "Unknown";
       if (!districts[district]) districts[district] = [];
       districts[district].push(row);
     });
 
-    // 🧮 Sort districts alphabetically
     const sortedDistricts = Object.keys(districts).sort((a, b) =>
       a.localeCompare(b)
     );
 
-    // Create PDF (Portrait)
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({
       orientation: "portrait",
       unit: "mm",
-      format: "a4"
+      format: "a4",
     });
 
     // === HEADING ===
@@ -171,9 +180,8 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
     );
 
     doc.setFont(undefined, "normal");
-    doc.setFontSize(10);
+    doc.setFontSize(9);
 
-    // === HEADERS ===
     const headers = [
       "SL. NO.",
       "District",
@@ -184,15 +192,14 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
       "B",
       "C",
       "D",
-      "Total"
+      "Total",
     ];
 
-    // === Totals ===
     let stateTotals = { A: 0, B: 0, C: 0, D: 0, total: 0 };
     const uniquePlaces = new Set();
     const tableBody = [];
 
-    // === Build District Rows ===
+    // === Build Table ===
     for (const district of sortedDistricts) {
       const rows = districts[district];
       if (district === "Unknown") continue;
@@ -234,7 +241,7 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
           B || "",
           C || "",
           D || "",
-          total || ""
+          total || "",
         ]);
       });
 
@@ -243,13 +250,13 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
         "",
         "",
         "",
-        { content: "Summary", styles: { fontStyle: "bold", halign: "right" } },
+        "Summary",
         "",
-        districtTotals.A.toString(),
-        districtTotals.B.toString(),
-        districtTotals.C.toString(),
-        districtTotals.D.toString(),
-        districtTotals.total.toString()
+        districtTotals.A,
+        districtTotals.B,
+        districtTotals.C,
+        districtTotals.D,
+        districtTotals.total,
       ]);
     }
 
@@ -258,16 +265,13 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
       "",
       "",
       "",
-      {
-        content: `STATE TOTAL (${uniquePlaces.size} Places)`,
-        styles: { fontStyle: "bold", halign: "right" }
-      },
+      `STATE TOTAL (${uniquePlaces.size} Places)`,
       "",
-      stateTotals.A.toString(),
-      stateTotals.B.toString(),
-      stateTotals.C.toString(),
-      stateTotals.D.toString(),
-      stateTotals.total.toString()
+      stateTotals.A,
+      stateTotals.B,
+      stateTotals.C,
+      stateTotals.D,
+      stateTotals.total,
     ]);
 
     // === Render Table ===
@@ -278,24 +282,25 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
       theme: "grid",
       styles: {
         fontSize: 8,
-        cellPadding: 1,
+        cellPadding: 1.5,
         halign: "center",
-        valign: "middle"
+        valign: "middle",
       },
       headStyles: {
         fillColor: [230, 230, 230],
         textColor: [0, 0, 0],
-        fontStyle: "bold"
+        fontStyle: "bold",
       },
       bodyStyles: {
-        lineColor: [200, 200, 200],
-        lineWidth: 0.1
+        lineColor: [180, 180, 180],
+        lineWidth: 0.1,
       },
       margin: { top: 25, left: 8, right: 8 },
-      tableWidth: "auto",
-      pageBreak: "auto"
+      tableWidth: "wrap",
+      pageBreak: "auto",
     });
 
+    // === Save ===
     doc.save("Gitajnana_Report.pdf");
   } catch (err) {
     console.error(err);
@@ -307,7 +312,6 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
 window.addEventListener("DOMContentLoaded", () => {
   document.getElementById("importBtn").addEventListener("click", importCSV);
   document.getElementById("exportBtn").addEventListener("click", exportCSV);
-  document.getElementById("pdfBtn").addEventListener("click", generatePDF);
   document.getElementById("dataForm").addEventListener("submit", addRecord);
 });
 
