@@ -1,9 +1,39 @@
+/*
+  REMINDER: For the "Download PDF Report" button to work, you MUST
+  add these two <script> tags to your HTML file's <head> section:
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+*/
+
 // ========= CONFIG ===========
 const SHEET_URL =
   "https://api.codetabs.com/v1/proxy?quest=" +
   encodeURIComponent(
     "https://script.google.com/macros/s/AKfycbybyg1IjkS-bA-uQPQB11C3ZuvxzZLhfBWwiCso4398jSJEFExMmatA6deH8zlEO42xeg/exec"
   );
+
+// *** FIX 1: DEFINE YOUR COLUMN ORDER HERE ***
+// Re-order this list to match the exact order you want in your table.
+// I've based this on your screenshot.
+const DISPLAY_HEADERS = [
+  "SL NO",
+  "BLOCK",
+  "BLOCK COORDINATOR WITH CONTACT NO.1",
+  "BLOCK COORDINATOR WITH CONTACT NO.2",
+  "DATE OF COMPETITION",
+  "DISTRICT",
+  "DISTRICT COORDINATOR WITH CONTACT NO.1",
+  "DISTRICT COORDINATOR WITH CONTACT NO.2",
+  "GROUP A",
+  "GROUP B",
+  "GROUP C",
+  "GROUP D",
+  "PLACE",
+  "TOTAL NO OF PARTICIPANTS",
+  "VENUE",
+  "YEAR OF COMPETITION",
+];
 
 // ========= GLOBAL ===========
 let allData = [];
@@ -29,7 +59,9 @@ async function loadData() {
       return;
     }
 
-    const headers = Object.keys(allData[0]);
+    // *** FIX 2: Use the DISPLAY_HEADERS array to set order ***
+    const headers = DISPLAY_HEADERS;
+
     let html =
       "<tr>" + headers.map((h) => `<th>${h}</th>`).join("") + "</tr>";
     allData.forEach((r) => {
@@ -121,6 +153,18 @@ async function importCSV() {
 
 // ========= PDF REPORT ===========
 document.getElementById("pdfBtn").addEventListener("click", async () => {
+  // Check if jsPDF and jsPDF-AutoTable are loaded
+  if (typeof window.jspdf === "undefined" || typeof window.jspdf.jsPDF === "undefined") {
+    console.error("jsPDF library is not loaded!");
+    alert("Error: PDF library (jsPDF) not found. Please check HTML file.");
+    return;
+  }
+  if (typeof doc.autoTable === "undefined") {
+     console.error("jsPDF-AutoTable plugin is not loaded!");
+     alert("Error: PDF library (jsPDF-AutoTable) not found. Please check HTML file.");
+     return;
+  }
+    
   try {
     const res = await fetch(SHEET_URL);
     const text = await res.text();
@@ -309,10 +353,12 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
 });
 
 // ========= INIT ===========
+// *** FIX 3: Consolidated event listeners ***
 window.addEventListener("DOMContentLoaded", () => {
   document.getElementById("importBtn").addEventListener("click", importCSV);
   document.getElementById("exportBtn").addEventListener("click", exportCSV);
   document.getElementById("dataForm").addEventListener("submit", addRecord);
+  
+  // Load the initial data once the page is ready
+  loadData();
 });
-
-window.addEventListener("load", loadData);
