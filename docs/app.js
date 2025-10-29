@@ -1,5 +1,3 @@
-// ========= app.js (Corrected) ===========
-
 /*
   REMINDER: For the "Download PDF Report" button to work, you MUST
   add these two <script> tags to your HTML file's <head> section:
@@ -15,7 +13,7 @@ const SHEET_URL =
     "https://script.google.com/macros/s/AKfycbybyg1IjkS-bA-uQPQB11C3ZuvxzZLhfBWwiCso4398jSJEFExMmatA6deH8zlEO42xeg/exec"
   );
 
-// DEFINE YOUR COLUMN ORDER HERE
+// *** FIX: UPDATED THIS LIST TO MATCH YOUR EXACT ORDER ***
 const DISPLAY_HEADERS = [
   "SL NO",
   "YEAR OF COMPETITION",
@@ -27,13 +25,12 @@ const DISPLAY_HEADERS = [
   "GROUP A",
   "GROUP B",
   "GROUP C",
-  "GROUP D",  
+  "GROUP D",
   "TOTAL NO OF PARTICIPANTS",
   "DISTRICT COORDINATOR WITH CONTACT NO.1",
-  "DISTRICT COORDINATOR WITH CONTACT NO.2",   
+  "DISTRICT COORDINATOR WITH CONTACT NO.2",
   "BLOCK COORDINATOR WITH CONTACT NO.1",
   "BLOCK COORDINATOR WITH CONTACT NO.2",
-  
 ];
 
 // ========= GLOBAL ===========
@@ -65,9 +62,15 @@ async function loadData() {
       return;
     }
 
+    // This 'headers' variable now uses your correct list
     const headers = DISPLAY_HEADERS;
+    
     let html =
       "<tr>" + headers.map((h) => `<th>${h}</th>`).join("") + "</tr>";
+    
+    // This loop relies on 'headers' being perfect.
+    // If 'r[h]' doesn't find a match (e.g., "SL NO" vs "SL. NO."),
+    // it will show an empty cell.
     allData.forEach((r) => {
       html +=
         "<tr>" + headers.map((h) => `<td>${r[h] ?? ""}</td>`).join("") + "</tr>";
@@ -105,7 +108,8 @@ async function exportCSV() {
     const data = await res.json();
     if (!data.length) return alert("No data to export!");
 
-    const headers = Object.keys(data[0]);
+    // Use the fixed display headers for the CSV as well
+    const headers = DISPLAY_HEADERS;
     const csv = [
       headers.join(","),
       ...data.map((r) => headers.map((h) => `"${r[h] || ""}"`).join(",")),
@@ -211,8 +215,7 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
       format: "a4",
     });
 
-    // *** THIS IS THE FIX ***
-    // The check for autoTable MUST come *after* 'doc' is created.
+    // Check for autoTable plugin
     if (typeof doc.autoTable === "undefined") {
        console.error("jsPDF-AutoTable plugin is not loaded!");
        alert("Error: PDF library (jsPDF-AutoTable) not found. Please check HTML file.");
@@ -233,7 +236,7 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
     doc.setFont(undefined, "normal");
     doc.setFontSize(9);
 
-    const headers = [
+    const pdfHeaders = [ // PDF headers are separate from the main table
       "SL. NO.",
       "District",
       "Block",
@@ -260,6 +263,7 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
       let districtTotals = { A: 0, B: 0, C: 0, D: 0, total: 0 };
 
       rows.forEach((r, i) => {
+        // We use the cleaned keys here
         const A = Number(r["GROUP A"] || 0);
         const B = Number(r["GROUP B"] || 0);
         const C = Number(r["GROUP C"] || 0);
@@ -328,7 +332,7 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
     // === Render Table ===
     doc.autoTable({
       startY: 25,
-      head: [headers],
+      head: [pdfHeaders],
       body: tableBody,
       theme: "grid",
       styles: {
@@ -361,34 +365,29 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
 
 // ========= INIT ===========
 window.addEventListener("DOMContentLoaded", () => {
-  // Check if all required elements exist
   const pdfBtn = document.getElementById("pdfBtn");
   const importBtn = document.getElementById("importBtn");
   const exportBtn = document.getElementById("exportBtn");
   const dataForm = document.getElementById("dataForm");
   
-  if (pdfBtn) {
-    // PDF listener is attached separately above
-  } else {
-    console.error("Fatal Error: Button with id 'pdfBtn' not found.");
-  }
-
+  if (!pdfBtn) console.error("Error: Button with id 'pdfBtn' not found.");
+  
   if (importBtn) {
     importBtn.addEventListener("click", importCSV);
   } else {
-    console.error("Fatal Error: Button with id 'importBtn' not found.");
+    console.error("Error: Button with id 'importBtn' not found.");
   }
 
   if (exportBtn) {
     exportBtn.addEventListener("click", exportCSV);
   } else {
-    console.error("Fatal Error: Button with id 'exportBtn' not found.");
+    console.error("Error: Button with id 'exportBtn' not found.");
   }
   
   if (dataForm) {
     dataForm.addEventListener("submit", addRecord);
   } else {
-    console.error("Fatal Error: Form with id 'dataForm' not found.");
+    console.error("Error: Form with id 'dataForm' not found.");
   }
   
   // Load the initial data once the page is ready
