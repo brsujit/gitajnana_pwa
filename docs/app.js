@@ -188,7 +188,7 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
 
     // === Totals ===
     let stateTotals = { A: 0, B: 0, C: 0, D: 0, total: 0 };
-    let totalBlocks = 0;
+    const uniquePlaces = new Set();
     const tableBody = [];
 
     // === Build District Rows ===
@@ -199,7 +199,6 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
       rows.sort((a, b) => (a["BLOCK"] || "").localeCompare(b["BLOCK"] || ""));
 
       let districtTotals = { A: 0, B: 0, C: 0, D: 0, total: 0 };
-      let blockCount = 0;
 
       rows.forEach((r, i) => {
         const A = Number(r["GROUP A"] || 0);
@@ -213,14 +212,14 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
         districtTotals.C += C;
         districtTotals.D += D;
         districtTotals.total += total;
-        blockCount++;
 
         stateTotals.A += A;
         stateTotals.B += B;
         stateTotals.C += C;
         stateTotals.D += D;
         stateTotals.total += total;
-        totalBlocks++;
+
+        if (r["PLACE"]) uniquePlaces.add(r["PLACE"].trim());
 
         tableBody.push([
           i + 1,
@@ -258,7 +257,10 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
       "",
       "",
       "",
-      { content: `STATE TOTAL (${uniquePlaces.size} Places)`, styles: { fontStyle: "bold", halign: "right" } },
+      {
+        content: `STATE TOTAL (${uniquePlaces.size} Places)`,
+        styles: { fontStyle: "bold", halign: "right" }
+      },
       "",
       stateTotals.A.toString(),
       stateTotals.B.toString(),
@@ -299,6 +301,7 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
     alert("Failed to generate PDF!");
   }
 });
+
 
 // ========= INIT ===========
 window.addEventListener("DOMContentLoaded", () => {
