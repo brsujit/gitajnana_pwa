@@ -188,7 +188,7 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
 
     // === Totals ===
     let stateTotals = { A: 0, B: 0, C: 0, D: 0, total: 0 };
-    const uniqueVenues = new Set();
+    const uniquePlaces = new Set();
     const tableBody = [];
 
     // === Build District Rows ===
@@ -219,7 +219,7 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
         stateTotals.D += D;
         stateTotals.total += total;
 
-        if (r["VENUE"]) uniqueVenues.add(r["VENUE"].trim());
+        if (r["PLACE"]) uniquePlaces.add(r["PLACE"].trim());
 
         tableBody.push([
           i + 1,
@@ -258,7 +258,7 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
       "",
       "",
       {
-        `STATE TOTAL (${uniqueVenues.size} Venues)`,
+        content: `STATE TOTAL (${uniquePlaces.size} Places)`,
         styles: { fontStyle: "bold", halign: "right" }
       },
       "",
