@@ -109,7 +109,6 @@ async function importCSV() {
 }
 
 // ========= PDF REPORT ===========
-// ========= PDF REPORT ===========
 document.getElementById("pdfBtn").addEventListener("click", async () => {
   try {
     const res = await fetch(SHEET_URL);
@@ -171,10 +170,10 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
       "Block",
       "Place",
       "Date",
-      "GROUP A",
-      "GROUP B",
-      "GROUP C",
-      "GROUP D",
+      "A",
+      "B",
+      "C",
+      "D",
       "Total"
     ];
 
@@ -226,12 +225,12 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
         ]);
       });
 
-      // Add District Summary Row
+      // Add “Summary” row after each district
       tableBody.push([
         "",
         "",
         "",
-        { content: "District Summary", styles: { fontStyle: "bold", halign: "right" } },
+        { content: "Summary", styles: { fontStyle: "bold", halign: "right" } },
         districtTotals.A.toString(),
         districtTotals.B.toString(),
         districtTotals.C.toString(),
@@ -253,7 +252,7 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
       stateTotals.total.toString()
     ]);
 
-    // Draw the final unified table
+    // Draw the unified table
     doc.autoTable({
       startY: 25,
       head: [headers],
@@ -279,7 +278,7 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
       pageBreak: "auto"
     });
 
-    // Save
+    // Save PDF
     doc.save("Gitajnana_Report.pdf");
   } catch (err) {
     console.error(err);
