@@ -114,10 +114,11 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
     const res = await fetch(SHEET_URL);
     const text = await res.text();
     let data;
+
     try {
       data = JSON.parse(text);
     } catch (e) {
-      console.error("Invalid JSON:", text);
+      console.error("Invalid JSON from server:", text);
       alert("Could not load data for PDF!");
       return;
     }
@@ -127,8 +128,8 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
       return;
     }
 
-    // 🧹 Clean keys
-    data = data.map(row => {
+    // Normalize keys (remove newlines, collapse spaces)
+    data = data.map((row) => {
       const cleaned = {};
       for (const key in row) {
         const cleanKey = key.replace(/\n/g, " ").replace(/\s+/g, " ").trim();
@@ -137,81 +138,42 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
       return cleaned;
     });
 
-    // 🧩 Group by District
+    // Group rows by DISTRICT
     const districts = {};
-    data.forEach(row => {
-      const district = row["DISTRICT"]?.trim() || "Unknown";
+    data.forEach((row) => {
+      const district = (row["DISTRICT"] || "Unknown").toString().trim();
       if (!districts[district]) districts[district] = [];
       districts[district].push(row);
     });
 
-    // 🧮 Sort districts alphabetically
     const sortedDistricts = Object.keys(districts).sort((a, b) =>
       a.localeCompare(b)
     );
 
-    // Create PDF (Portrait)
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({
-      orientation: "portrait",
-      unit: "mm",
-      format: "a4"
-    });
-
-    // === HEADING ===
-    doc.setFontSize(14);
-    doc.setTextColor(0, 0, 0);
-    doc.setFont(undefined, "bold");
-    doc.text(
-      "7TH ODISHA STATE LEVEL GEETA CHANTING COMPETITION 2025",
-      105,
-      15,
-      { align: "center" }
-    );
-
-    doc.setFont(undefined, "normal");
-    doc.setFontSize(10);
-
-    // === HEADERS ===
-    const headers = [
-      "SL. NO.",
-      "District",
-      "Block",
-      "Place",
-      "Date",
-      "A",
-      "B",
-      "C",
-      "D",
-      "Total"
-    ];
-
-    // === Totals ===
-    let stateTotals = { A: 0, B: 0, C: 0, D: 0, total: 0 };
+    // Count unique venues
     const uniqueVenues = new Set();
+
+    // Prepare totals
+    let stateTotals = { A: 0, B: 0, C: 0, D: 0, total: 0 };
     const tableBody = [];
 
-    // === Build District Rows ===
+    // Build rows district by district
     for (const district of sortedDistricts) {
       const rows = districts[district];
-      if (district === "Unknown") continue;
+      if (!rows || rows.length === 0 || district === "Unknown") continue;
 
-      rows.sort((a, b) => (a["BLOCK"] || "").localeCompare(b["BLOCK"] || ""));
+      // Sort by BLOCK or PLACE if you prefer
+      rows.sort((a, b) =>
+        (a["BLOCK"] || "").toString().localeCompare((b["BLOCK"] || "").toString())
+      );
 
-      let districtTotals = { A: 0, B: 0, C: 0, D: 0, total: 0 };
-
+      // For each venue row
       rows.forEach((r, i) => {
-        const A = Number(r["GROUP A"] || 0);
-        const B = Number(r["GROUP B"] || 0);
-        const C = Number(r["GROUP C"] || 0);
-        const D = Number(r["GROUP D"] || 0);
-        const total = Number(r["TOTAL NO OF PARTICIPANTS"] || 0);
-
-        districtTotals.A += A;
-        districtTotals.B += B;
-        districtTotals.C += C;
-        districtTotals.D += D;
-        districtTotals.total += total;
+        const A = Number(r["GROUP A"] || r["GROUP\n A"] || 0) || 0;
+        const B = Number(r["GROUP B"] || r["GROUP\n B"] || 0) || 0;
+        const C = Number(r["GROUP C"] || r["GROUP\n C"] || 0) || 0;
+        const D = Number(r["GROUP D"] || r["GROUP\n D"] || 0) || 0;
+        const total = Number(r["TOTAL NO OF PARTICIPANTS"] || r["TOTAL \nNO OF\nPARTICIPANTS"] || 0) || 0;
 
         stateTotals.A += A;
         stateTotals.B += B;
@@ -219,16 +181,25 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
         stateTotals.D += D;
         stateTotals.total += total;
 
-        if (r["VENUE"]) uniquePlaces.add(r["VENUE"].trim());
+        // Collect venue name safely (handle header variations)
+        const venueRaw =
+          r["VENUE"] ??
+          r["VENUE "] ??
+          r["VENUE\n"] ??
+          r["Venue"] ??
+          r["place"] ??
+          "";
+        const venue = venueRaw ? String(venueRaw).trim() : "";
+        if (venue) uniqueVenues.add(venue);
 
         tableBody.push([
-          i + 1,
+          (i + 1).toString(),
           i === 0 ? district : "",
-          r["BLOCK"] || "",
-          r["PLACE"] || "",
+          r["BLOCK"] || r["BLOCK "] || "",
+          venue || r["PLACE"] || "",
           r["DATE OF COMPETITION"]
             ? new Date(r["DATE OF COMPETITION"]).toLocaleDateString("en-IN")
-            : "",
+            : (r["DATE"] ? new Date(r["DATE"]).toLocaleDateString("en-IN") : ""),
           A || "",
           B || "",
           C || "",
@@ -237,68 +208,86 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
         ]);
       });
 
-      // District Summary Row
+      // District summary row (plain strings, not objects)
+      const dA = rows.reduce((s, rr) => s + (Number(rr["GROUP A"] || rr["GROUP\n A"] || 0) || 0), 0);
+      const dB = rows.reduce((s, rr) => s + (Number(rr["GROUP B"] || rr["GROUP\n B"] || 0) || 0), 0);
+      const dC = rows.reduce((s, rr) => s + (Number(rr["GROUP C"] || rr["GROUP\n C"] || 0) || 0), 0);
+      const dD = rows.reduce((s, rr) => s + (Number(rr["GROUP D"] || rr["GROUP\n D"] || 0) || 0), 0);
+      const dTotal = rows.reduce((s, rr) => s + (Number(rr["TOTAL NO OF PARTICIPANTS"] || rr["TOTAL \nNO OF\nPARTICIPANTS"] || 0) || 0), 0);
+
       tableBody.push([
         "",
         "",
         "",
-        { content: "Summary", styles: { fontStyle: "bold", halign: "right" } },
+        "Summary",
         "",
-        districtTotals.A.toString(),
-        districtTotals.B.toString(),
-        districtTotals.C.toString(),
-        districtTotals.D.toString(),
-        districtTotals.total.toString()
+        dA || "",
+        dB || "",
+        dC || "",
+        dD || "",
+        dTotal || ""
       ]);
     }
 
-    // === State Total Row ===
+    // Debug: log uniqueVenues count & sample (remove later)
+    console.log("Unique Venues Count:", uniqueVenues.size);
+    // console.log("Unique Venues List:", Array.from(uniqueVenues).slice(0, 50));
+
+    // State total row using uniqueVenues
     tableBody.push([
       "",
       "",
       "",
-      {
-        content: `STATE TOTAL (${uniqueVenues.size} Venues)`,
-        styles: { fontStyle: "bold", halign: "right" }
-      },
+      `STATE TOTAL (${uniqueVenues.size} Venues)`,
       "",
-      stateTotals.A.toString(),
-      stateTotals.B.toString(),
-      stateTotals.C.toString(),
-      stateTotals.D.toString(),
-      stateTotals.total.toString()
+      stateTotals.A || "",
+      stateTotals.B || "",
+      stateTotals.C || "",
+      stateTotals.D || "",
+      stateTotals.total || ""
     ]);
 
-    // === Render Table ===
+    // Create PDF (A4 portrait)
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+
+    // Title
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(14);
+    doc.text("7TH ODISHA STATE LEVEL GEETA CHANTING COMPETITION 2025", doc.internal.pageSize.getWidth() / 2, 15, { align: "center" });
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+
+    // Table headers (use smaller set to fit portrait)
+    const headers = ["SL. NO.", "District", "Block", "Venue", "Date", "A", "B", "C", "D", "Total"];
+
+    // Render table
     doc.autoTable({
-      startY: 25,
+      startY: 22,
       head: [headers],
       body: tableBody,
       theme: "grid",
-      styles: {
-        fontSize: 8,
-        cellPadding: 1,
-        halign: "center",
-        valign: "middle"
-      },
-      headStyles: {
-        fillColor: [230, 230, 230],
-        textColor: [0, 0, 0],
-        fontStyle: "bold"
-      },
-      bodyStyles: {
-        lineColor: [200, 200, 200],
-        lineWidth: 0.1
-      },
-      margin: { top: 25, left: 8, right: 8 },
-      tableWidth: "auto",
+      styles: { fontSize: 8, cellPadding: 1, halign: "center", valign: "middle" },
+      headStyles: { fillColor: [230, 230, 230], textColor: [0, 0, 0], fontStyle: "bold" },
+      margin: { left: 8, right: 8, top: 25 },
+      tableWidth: "wrap",
       pageBreak: "auto"
     });
 
-    doc.save("Gitajnana_Report.pdf");
+    // Footer: page numbers and generated date
+    const pageCount = doc.internal.getNumberOfPages();
+    const today = new Date().toLocaleDateString("en-GB"); // dd/mm/yyyy
+    for (let p = 1; p <= pageCount; p++) {
+      doc.setPage(p);
+      doc.setFontSize(8);
+      doc.text(`Generated: ${today}`, 10, doc.internal.pageSize.getHeight() - 8);
+      doc.text(`Page ${p} of ${pageCount}`, doc.internal.pageSize.getWidth() - 10, doc.internal.pageSize.getHeight() - 8, { align: "right" });
+    }
+
+    doc.save("Gitajnana_Report_Venues.pdf");
   } catch (err) {
-    console.error(err);
-    alert("Failed to generate PDF!");
+    console.error("PDF generation error:", err);
+    alert("Failed to generate PDF! See console for details.");
   }
 });
 
