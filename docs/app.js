@@ -152,6 +152,9 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
 
     // Count unique venues
     const uniqueVenues = new Set();
+    const uniqueDistricts = new Set();
+    const uniqueBlocks = new Set();
+
 
     // Prepare totals
     let stateTotals = { A: 0, B: 0, C: 0, D: 0, total: 0 };
@@ -191,6 +194,9 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
           "";
         const venue = venueRaw ? String(venueRaw).trim() : "";
         if (venue) uniqueVenues.add(venue);
+        uniqueDistricts.add(district);
+        if (r["BLOCK"]) uniqueBlocks.add(r["BLOCK"].toString().trim());
+
 
         tableBody.push([
           (i + 1).toString(),
@@ -238,7 +244,7 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
       "",
       "",
       "",
-      `STATE TOTAL (${uniqueVenues.size} Venues)`,
+      `STATE TOTAL (${uniqueDistricts.size} Dists, ${uniqueBlocks.size} Blocks, ${uniqueVenues.size} Venues)`,
       "",
       stateTotals.A || "",
       stateTotals.B || "",
