@@ -282,14 +282,23 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
   columnStyles: {
     1: { halign: "left" }, // District
     2: { halign: "left" }, // Block
-    3: { halign: "left" }, // Place
-    4: { halign: "left" }  // Venue
+    3: { halign: "left" }, // Venue
+    4: { halign: "left" }  // Date
   },
-  margin: { left: 4, right: 4, top: 25 },
+  margin: { left: 4, right: 6, top: 25 }, // slightly increased right margin
   tableWidth: "wrap",
-  pageBreak: "auto"
-});
+  pageBreak: "auto",
 
+  // 🖤 Bold + black for last row (State Total)
+  didParseCell: function (data) {
+    const row = data.row;
+    if (row.index === tableBody.length - 1) {
+      data.cell.styles.fontStyle = "bold";
+      data.cell.styles.textColor = [0, 0, 0];
+      data.cell.styles.fillColor = [240, 240, 240]; // light gray background (optional)
+    }
+  }
+});
 
     // Footer: page numbers and generated date
     const pageCount = doc.internal.getNumberOfPages();
