@@ -282,35 +282,34 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
   columnStyles: {
     1: { halign: "left" }, // District
     2: { halign: "left" }, // Block
-    3: { halign: "left" }, // Venue/Place
-    4: { halign: "left" }  // Date
+    3: { halign: "left" }, // Place
+    4: { halign: "left" }  // Venue
   },
-  margin: { left: 4, right: 4, top: 25 }, // added small right margin
+  margin: { left: 4, right: 6, top: 25 }, // added slight right margin
   tableWidth: "wrap",
   pageBreak: "auto",
 
-  // 💅 Styling for Summary + State Total rows
+  // ✅ Safe highlighting for district & state total rows
   didParseCell: function (data) {
-    if (!data.row || !data.row.raw) return;
-    const rowText = String(data.row.raw[3] || "");
+    const rowText = (data.cell.text || []).join(" ");
 
-    // District Summary: darker gray, not bold
-    if (rowText.includes("Summary") && !rowText.includes("STATE TOTAL")) {
+    // Slightly darker gray and text for "Summary" rows
+    if (rowText.includes("Summary")) {
+      data.cell.styles.fillColor = [230, 230, 230];
+      data.cell.styles.textColor = [50, 50, 50];
       data.cell.styles.fontStyle = "normal";
-      data.cell.styles.textColor = [60, 60, 60];
-      data.cell.styles.fillColor = [235, 235, 235];
     }
 
-    // State Total: bold, black, more prominent gray
-    // State Total: bold, black, darker gray, normal size, left aligned
-if (rowText.includes("STATE TOTAL")) {
-  data.cell.styles.fontStyle = "bold";
-  data.cell.styles.textColor = [0, 0, 0];
-  data.cell.styles.fillColor = [210, 210, 210];
-  data.cell.styles.fontSize = 8;   // normal size restored
-  data.cell.styles.halign = "left"; // back to left alignment
-}
-
+    // Bold black text for "STATE TOTAL"
+    if (rowText.includes("STATE TOTAL")) {
+      data.cell.styles.fontStyle = "bold";
+      data.cell.styles.textColor = [0, 0, 0];
+      data.cell.styles.fillColor = [210, 210, 210];
+      data.cell.styles.fontSize = 8;   // normal size restored
+      data.cell.styles.halign = "left"; // left-aligned again
+    }
+  }
+});
 
     // Footer: page numbers and generated date
     const pageCount = doc.internal.getNumberOfPages();
