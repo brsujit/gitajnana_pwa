@@ -263,16 +263,27 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
 
     // Render table
     doc.autoTable({
-      startY: 22,
-      head: [headers],
-      body: tableBody,
-      theme: "grid",
-      styles: { fontSize: 8, cellPadding: 1, halign: "center", valign: "middle" },
-      headStyles: { fillColor: [230, 230, 230], textColor: [0, 0, 0], fontStyle: "bold" },
-      margin: { left: 8, right: 8, top: 25 },
-      tableWidth: "wrap",
-      pageBreak: "auto"
-    });
+  startY: 22,
+  head: [headers],
+  body: tableBody,
+  theme: "grid",
+  styles: { fontSize: 8, cellPadding: 1, halign: "center", valign: "middle" },
+  headStyles: {
+    fillColor: [230, 230, 230],
+    textColor: [0, 0, 0],
+    fontStyle: "bold"
+  },
+  columnStyles: {
+    1: { halign: "left" }, // District
+    2: { halign: "left" }, // Block
+    3: { halign: "left" }, // Place
+    4: { halign: "left" }  // Venue
+  },
+  margin: { left: 8, right: 8, top: 25 },
+  tableWidth: "wrap",
+  pageBreak: "auto"
+});
+
 
     // Footer: page numbers and generated date
     const pageCount = doc.internal.getNumberOfPages();
