@@ -291,14 +291,28 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
 
   // 🖤 Bold + black for last row (State Total)
   didParseCell: function (data) {
-    const row = data.row;
-    if (row.index === tableBody.length - 1) {
-      data.cell.styles.fontStyle = "bold";
-      data.cell.styles.textColor = [0, 0, 0];
-      data.cell.styles.fillColor = [240, 240, 240]; // light gray background (optional)
-    }
+  const row = data.row;
+  const cell = data.cell;
+  if (!row.raw || !row.raw[3]) return;
+
+  const cellText = String(row.raw[3]);
+
+  // 🌑 District Summary: slightly darker gray, not bold
+  if (cellText.includes("Summary") && !cellText.includes("STATE TOTAL")) {
+    cell.styles.fontStyle = "normal";
+    cell.styles.textColor = [60, 60, 60]; // dark gray text
+    cell.styles.fillColor = [235, 235, 235]; // light gray background
   }
-});
+
+  // 🖤 STATE TOTAL: bold, solid black, slightly larger font
+  if (cellText.includes("STATE TOTAL")) {
+    cell.styles.fontStyle = "bold";
+    cell.styles.textColor = [0, 0, 0];
+    cell.styles.fillColor = [220, 220, 220]; // a bit darker gray
+    cell.styles.halign = "center";
+    cell.styles.fontSize = 9;
+  }
+},
 
     // Footer: page numbers and generated date
     const pageCount = doc.internal.getNumberOfPages();
