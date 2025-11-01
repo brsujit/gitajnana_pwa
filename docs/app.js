@@ -273,7 +273,12 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
   head: [headers],
   body: tableBody,
   theme: "grid",
-  styles: { fontSize: 8, cellPadding: 1, halign: "center", valign: "middle" },
+  styles: {
+    fontSize: 8,
+    cellPadding: 1,
+    halign: "center",
+    valign: "middle"
+  },
   headStyles: {
     fillColor: [230, 230, 230],
     textColor: [0, 0, 0],
@@ -282,33 +287,32 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
   columnStyles: {
     1: { halign: "left" }, // District
     2: { halign: "left" }, // Block
-    3: { halign: "left" }, // Place
-    4: { halign: "left" }  // Venue
+    3: { halign: "left" }, // Venue / Place
+    4: { halign: "left" }  // Date
   },
-  margin: { left: 4, right: 6, top: 25 }, // added slight right margin
+  margin: { left: 4, right: 6, top: 25 },
   tableWidth: "wrap",
   pageBreak: "auto",
 
-  // ✅ Safe highlighting for district & state total rows
-didParseCell: function (data) {
-  const rowText = (data.cell.text || []).join(" ").toUpperCase();
+  // 🎨 Highlight special rows
+  didParseCell: function (data) {
+    const text = (data.cell.text || []).join(" ").toUpperCase();
 
-  // --- District Summary Row ---
-  if (rowText.includes("SUMMARY") && !rowText.includes("STATE TOTAL")) {
-    data.cell.styles.fillColor = [235, 235, 235]; // light gray full width
-    data.cell.styles.textColor = [60, 60, 60];
-    data.cell.styles.fontStyle = "normal";
+    // District Summary row
+    if (text.includes("SUMMARY") && !text.includes("STATE TOTAL")) {
+      data.cell.styles.fillColor = [235, 235, 235]; // light gray
+      data.cell.styles.textColor = [40, 40, 40];     // slightly darker gray text
+      data.cell.styles.fontStyle = "normal";
+    }
+
+    // State Total row
+    if (text.includes("STATE TOTAL")) {
+      data.cell.styles.fillColor = [190, 190, 190]; // darker gray
+      data.cell.styles.textColor = [0, 0, 0];       // black text
+      data.cell.styles.fontStyle = "bold";
+    }
   }
-
-  // --- State Total Row ---
-  if (rowText.includes("STATE TOTAL")) {
-    data.cell.styles.fillColor = [190, 190, 190]; // darker gray highlight
-    data.cell.styles.textColor = [0, 0, 0];
-    data.cell.styles.fontStyle = "bold";
-    data.cell.styles.fontSize = 8;
-  }
-}
-
+});
 
     // Footer: page numbers and generated date
     const pageCount = doc.internal.getNumberOfPages();
