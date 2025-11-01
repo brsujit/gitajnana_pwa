@@ -268,7 +268,8 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
     const headers = ["SL. NO.", "District", "Block", "Venue", "Date", "A", "B", "C", "D", "Total"];
 
     // Render table
-    doc.autoTable({
+    // Render table
+doc.autoTable({
   startY: 22,
   head: [headers],
   body: tableBody,
@@ -294,29 +295,28 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
   tableWidth: "wrap",
   pageBreak: "auto",
 
- // 🖤 Highlight only State Total row; keep district summary plain
-didParseCell: function (data) {
-  const cell = data.cell;
-  const text = (cell.text && cell.text[0]) ? cell.text[0].trim() : "";
+  // 🖤 Highlight only State Total row; keep district summary plain
+  didParseCell: function (data) {
+    const cell = data.cell;
+    const text = (cell.text && cell.text[0]) ? cell.text[0].trim() : "";
 
-  // 🟩 Make district names bold & black
-  if (data.column.index === 1 && text !== "" && !text.includes("STATE TOTAL")) {
-    cell.styles.fontStyle = "bold";
-    cell.styles.textColor = [0, 0, 0];
+    // 🟩 Make district names bold & black
+    if (data.column.index === 1 && text !== "" && !text.includes("STATE TOTAL")) {
+      cell.styles.fontStyle = "bold";
+      cell.styles.textColor = [0, 0, 0];
+    }
+
+    // 🟨 Highlight & bold the State Total row (entire row)
+    if (text.includes("STATE TOTAL")) {
+      cell.styles.fillColor = [220, 220, 220]; // light gray background
+      cell.styles.fontStyle = "bold";
+      cell.styles.textColor = [0, 0, 0];       // dark text
+    }
+
+    // 🚫 District summary rows stay normal (no highlight)
   }
-
-  // 🟨 Highlight & bold the State Total row (entire row)
-  if (text.includes("STATE TOTAL")) {
-    cell.styles.fillColor = [220, 220, 220]; // light gray background
-    cell.styles.fontStyle = "bold";
-    cell.styles.textColor = [0, 0, 0];       // dark text
-  }
-
-  // 🚫 District summary rows stay normal (no highlight)
-}
 });
 
-    
     // Footer: page numbers and generated date
     const pageCount = doc.internal.getNumberOfPages();
     const today = new Date().toLocaleDateString("en-GB"); // dd/mm/yyyy
