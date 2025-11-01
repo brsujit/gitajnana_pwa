@@ -290,26 +290,25 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
   pageBreak: "auto",
 
   // ✅ Safe highlighting for district & state total rows
-  didParseCell: function (data) {
-    const rowText = (data.cell.text || []).join(" ");
+didParseCell: function (data) {
+  const rowText = (data.cell.text || []).join(" ").toUpperCase();
 
-    // Slightly darker gray and text for "Summary" rows
-    if (rowText.includes("Summary")) {
-      data.cell.styles.fillColor = [230, 230, 230];
-      data.cell.styles.textColor = [50, 50, 50];
-      data.cell.styles.fontStyle = "normal";
-    }
-
-    // Bold black text for "STATE TOTAL"
-    if (rowText.includes("STATE TOTAL")) {
-      data.cell.styles.fontStyle = "bold";
-      data.cell.styles.textColor = [0, 0, 0];
-      data.cell.styles.fillColor = [210, 210, 210];
-      data.cell.styles.fontSize = 8;   // normal size restored
-      data.cell.styles.halign = "left"; // left-aligned again
-    }
+  // --- District Summary Row ---
+  if (rowText.includes("SUMMARY") && !rowText.includes("STATE TOTAL")) {
+    data.cell.styles.fillColor = [235, 235, 235]; // light gray full width
+    data.cell.styles.textColor = [60, 60, 60];
+    data.cell.styles.fontStyle = "normal";
   }
-});
+
+  // --- State Total Row ---
+  if (rowText.includes("STATE TOTAL")) {
+    data.cell.styles.fillColor = [190, 190, 190]; // darker gray highlight
+    data.cell.styles.textColor = [0, 0, 0];
+    data.cell.styles.fontStyle = "bold";
+    data.cell.styles.fontSize = 8;
+  }
+}
+
 
     // Footer: page numbers and generated date
     const pageCount = doc.internal.getNumberOfPages();
