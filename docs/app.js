@@ -279,7 +279,7 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
     3: { halign: "left" }, // Place
     4: { halign: "left" }  // Venue
   },
-  margin: { left: 8, right: 8, top: 25 },
+  margin: { left: 8, right: 15, top: 25 },
   tableWidth: "wrap",
   pageBreak: "auto"
 });
