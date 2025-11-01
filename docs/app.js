@@ -316,20 +316,7 @@ didParseCell: function (data) {
 }
 });
 
-    // Detect "Summary" rows or the final "STATE TOTAL"
-    const isSummaryRow =
-      row.raw &&
-      (String(row.raw[3]).includes("Summary") ||
-        String(row.raw[3]).includes("STATE TOTAL"));
-
-    if (isSummaryRow) {
-      cell.styles.fontStyle = "bold";
-      cell.styles.textColor = [0, 0, 0];
-      cell.styles.fillColor = [240, 240, 240]; // optional background
-    }
-  }
-});
-
+    
     // Footer: page numbers and generated date
     const pageCount = doc.internal.getNumberOfPages();
     const today = new Date().toLocaleDateString("en-GB"); // dd/mm/yyyy
