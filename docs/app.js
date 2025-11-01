@@ -282,37 +282,35 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
   columnStyles: {
     1: { halign: "left" }, // District
     2: { halign: "left" }, // Block
-    3: { halign: "left" }, // Venue
+    3: { halign: "left" }, // Venue/Place
     4: { halign: "left" }  // Date
   },
-  margin: { left: 4, right: 6, top: 25 }, // slightly increased right margin
+  margin: { left: 6, right: 6, top: 25 }, // added small right margin
   tableWidth: "wrap",
   pageBreak: "auto",
 
-  // 🖤 Bold + black for last row (State Total)
+  // 💅 Styling for Summary + State Total rows
   didParseCell: function (data) {
-  const row = data.row;
-  const cell = data.cell;
-  if (!row.raw || !row.raw[3]) return;
+    if (!data.row || !data.row.raw) return;
+    const rowText = String(data.row.raw[3] || "");
 
-  const cellText = String(row.raw[3]);
+    // District Summary: darker gray, not bold
+    if (rowText.includes("Summary") && !rowText.includes("STATE TOTAL")) {
+      data.cell.styles.fontStyle = "normal";
+      data.cell.styles.textColor = [60, 60, 60];
+      data.cell.styles.fillColor = [235, 235, 235];
+    }
 
-  // 🌑 District Summary: slightly darker gray, not bold
-  if (cellText.includes("Summary") && !cellText.includes("STATE TOTAL")) {
-    cell.styles.fontStyle = "normal";
-    cell.styles.textColor = [60, 60, 60]; // dark gray text
-    cell.styles.fillColor = [235, 235, 235]; // light gray background
+    // State Total: bold, black, more prominent gray
+    if (rowText.includes("STATE TOTAL")) {
+      data.cell.styles.fontStyle = "bold";
+      data.cell.styles.textColor = [0, 0, 0];
+      data.cell.styles.fillColor = [210, 210, 210];
+      data.cell.styles.fontSize = 9;
+      data.cell.styles.halign = "center";
+    }
   }
-
-  // 🖤 STATE TOTAL: bold, solid black, slightly larger font
-  if (cellText.includes("STATE TOTAL")) {
-    cell.styles.fontStyle = "bold";
-    cell.styles.textColor = [0, 0, 0];
-    cell.styles.fillColor = [220, 220, 220]; // a bit darker gray
-    cell.styles.halign = "center";
-    cell.styles.fontSize = 9;
-  }
-},
+});
 
     // Footer: page numbers and generated date
     const pageCount = doc.internal.getNumberOfPages();
