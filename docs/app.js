@@ -302,15 +302,15 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
     }
 
     // State Total: bold, black, more prominent gray
-    if (rowText.includes("STATE TOTAL")) {
-      data.cell.styles.fontStyle = "bold";
-      data.cell.styles.textColor = [0, 0, 0];
-      data.cell.styles.fillColor = [210, 210, 210];
-      data.cell.styles.fontSize = 9;
-      data.cell.styles.halign = "center";
-    }
-  }
-});
+    // State Total: bold, black, darker gray, normal size, left aligned
+if (rowText.includes("STATE TOTAL")) {
+  data.cell.styles.fontStyle = "bold";
+  data.cell.styles.textColor = [0, 0, 0];
+  data.cell.styles.fillColor = [210, 210, 210];
+  data.cell.styles.fontSize = 8;   // normal size restored
+  data.cell.styles.halign = "left"; // back to left alignment
+}
+
 
     // Footer: page numbers and generated date
     const pageCount = doc.internal.getNumberOfPages();
