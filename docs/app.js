@@ -268,8 +268,7 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
     const headers = ["SL. NO.", "District", "Block", "Venue", "Date", "A", "B", "C", "D", "Total"];
 
     // Render table
-    // Render table
-doc.autoTable({
+    doc.autoTable({
   startY: 22,
   head: [headers],
   body: tableBody,
@@ -295,25 +294,22 @@ doc.autoTable({
   tableWidth: "wrap",
   pageBreak: "auto",
 
-  // 🖤 Highlight only State Total row; keep district summary plain
+  // 🖤 Highlight Summary + State Total rows
   didParseCell: function (data) {
+    const row = data.row;
     const cell = data.cell;
-    const text = (cell.text && cell.text[0]) ? cell.text[0].trim() : "";
 
-    // 🟩 Make district names bold & black
-    if (data.column.index === 1 && text !== "" && !text.includes("STATE TOTAL")) {
+    // Detect "Summary" rows or the final "STATE TOTAL"
+    const isSummaryRow =
+      row.raw &&
+      (String(row.raw[3]).includes("Summary") ||
+        String(row.raw[3]).includes("STATE TOTAL"));
+
+    if (isSummaryRow) {
       cell.styles.fontStyle = "bold";
       cell.styles.textColor = [0, 0, 0];
+      cell.styles.fillColor = [240, 240, 240]; // optional background
     }
-
-    // 🟨 Highlight & bold the State Total row (entire row)
-    if (text.includes("STATE TOTAL")) {
-      cell.styles.fillColor = [220, 220, 220]; // light gray background
-      cell.styles.fontStyle = "bold";
-      cell.styles.textColor = [0, 0, 0];       // dark text
-    }
-
-    // 🚫 District summary rows stay normal (no highlight)
   }
 });
 
