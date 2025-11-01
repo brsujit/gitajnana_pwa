@@ -285,7 +285,7 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
     3: { halign: "left" }, // Venue/Place
     4: { halign: "left" }  // Date
   },
-  margin: { left: 6, right: 6, top: 25 }, // added small right margin
+  margin: { left: 4, right: 4, top: 25 }, // added small right margin
   tableWidth: "wrap",
   pageBreak: "auto",
 
