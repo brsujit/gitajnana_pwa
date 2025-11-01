@@ -322,7 +322,7 @@ if (rowText.includes("STATE TOTAL")) {
       doc.text(`Page ${p} of ${pageCount}`, doc.internal.pageSize.getWidth() - 10, doc.internal.pageSize.getHeight() - 8, { align: "right" });
     }
 
-    doc.save("Gitajnana_Report_Venues.pdf");
+    doc.save("GCC_Report_Venues.pdf");
   } catch (err) {
     console.error("PDF generation error:", err);
     alert("Failed to generate PDF! See console for details.");
