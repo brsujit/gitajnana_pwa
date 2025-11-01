@@ -294,16 +294,27 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
   tableWidth: "wrap",
   pageBreak: "auto",
 
-  // 🖤 Highlight Summary + State Total rows
-  didParseCell: function (data) {
-    const row = data.row;
-    const cell = data.cell;
+ // 🖤 Highlight only State Total row; keep district summary plain
+didParseCell: function (data) {
+  const cell = data.cell;
+  const text = (cell.text && cell.text[0]) ? cell.text[0].trim() : "";
 
-    // Make district names bold and black
-    if (data.column.index === 1 && data.cell.text && data.cell.text[0].trim() !== "") {
-    data.cell.styles.fontStyle = "bold";
-    data.cell.styles.textColor = [0, 0, 0];
+  // 🟩 Make district names bold & black
+  if (data.column.index === 1 && text !== "" && !text.includes("STATE TOTAL")) {
+    cell.styles.fontStyle = "bold";
+    cell.styles.textColor = [0, 0, 0];
+  }
+
+  // 🟨 Highlight & bold the State Total row (entire row)
+  if (text.includes("STATE TOTAL")) {
+    cell.styles.fillColor = [220, 220, 220]; // light gray background
+    cell.styles.fontStyle = "bold";
+    cell.styles.textColor = [0, 0, 0];       // dark text
+  }
+
+  // 🚫 District summary rows stay normal (no highlight)
 }
+
 
     // Detect "Summary" rows or the final "STATE TOTAL"
     const isSummaryRow =
