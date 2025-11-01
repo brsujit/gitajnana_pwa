@@ -314,7 +314,7 @@ didParseCell: function (data) {
 
   // 🚫 District summary rows stay normal (no highlight)
 }
-
+});
 
     // Detect "Summary" rows or the final "STATE TOTAL"
     const isSummaryRow =
