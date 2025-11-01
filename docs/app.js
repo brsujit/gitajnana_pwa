@@ -287,29 +287,28 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
   columnStyles: {
     1: { halign: "left" }, // District
     2: { halign: "left" }, // Block
-    3: { halign: "left" }, // Venue / Place
+    3: { halign: "left" }, // Venue
     4: { halign: "left" }  // Date
   },
   margin: { left: 4, right: 6, top: 25 },
   tableWidth: "wrap",
   pageBreak: "auto",
 
-  // 🎨 Highlight special rows
+  // 🖤 Highlight Summary + State Total rows
   didParseCell: function (data) {
-    const text = (data.cell.text || []).join(" ").toUpperCase();
+    const row = data.row;
+    const cell = data.cell;
 
-    // District Summary row
-    if (text.includes("SUMMARY") && !text.includes("STATE TOTAL")) {
-      data.cell.styles.fillColor = [235, 235, 235]; // light gray
-      data.cell.styles.textColor = [40, 40, 40];     // slightly darker gray text
-      data.cell.styles.fontStyle = "normal";
-    }
+    // Detect "Summary" rows or the final "STATE TOTAL"
+    const isSummaryRow =
+      row.raw &&
+      (String(row.raw[3]).includes("Summary") ||
+        String(row.raw[3]).includes("STATE TOTAL"));
 
-    // State Total row
-    if (text.includes("STATE TOTAL")) {
-      data.cell.styles.fillColor = [190, 190, 190]; // darker gray
-      data.cell.styles.textColor = [0, 0, 0];       // black text
-      data.cell.styles.fontStyle = "bold";
+    if (isSummaryRow) {
+      cell.styles.fontStyle = "bold";
+      cell.styles.textColor = [0, 0, 0];
+      cell.styles.fillColor = [240, 240, 240]; // optional background
     }
   }
 });
