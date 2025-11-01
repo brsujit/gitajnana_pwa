@@ -299,6 +299,12 @@ document.getElementById("pdfBtn").addEventListener("click", async () => {
     const row = data.row;
     const cell = data.cell;
 
+    // Make district names bold and black
+    if (data.column.index === 1 && data.cell.text && data.cell.text[0].trim() !== "") {
+    data.cell.styles.fontStyle = "bold";
+    data.cell.styles.textColor = [0, 0, 0];
+}
+
     // Detect "Summary" rows or the final "STATE TOTAL"
     const isSummaryRow =
       row.raw &&
